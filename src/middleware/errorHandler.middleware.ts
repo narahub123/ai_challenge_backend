@@ -48,10 +48,12 @@ const handleMongoError = (err: any): AppError => {
 // 개발 환경용 에러 응답
 const sendErrorDev = (err: AppError, res: Response) => {
   res.status(err.statusCode || 500).json({
-    status: "error",
-    error: err,
-    message: err.message,
-    stack: err.stack,
+    success: false,
+    data: {
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    },
   });
 };
 
@@ -60,15 +62,19 @@ const sendErrorProd = (err: AppError, res: Response) => {
   // Operational 에러: 클라이언트에게 신뢰할 수 있는 에러 메시지 전송
   if (err.isOperational) {
     res.status(err.statusCode || 500).json({
-      status: "error",
-      message: err.message,
+      success: false,
+      data: {
+        message: err.message,
+      },
     });
   } else {
     // 프로그래밍 에러: 세부 정보 누출 방지
     console.error("ERROR 💥", err);
     res.status(500).json({
-      status: "error",
-      message: "서버에서 오류가 발생했습니다.",
+      success: false,
+      data: {
+        message: "서버에서 오류가 발생했습니다.",
+      },
     });
   }
 };
