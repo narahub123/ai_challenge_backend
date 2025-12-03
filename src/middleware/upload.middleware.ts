@@ -48,3 +48,25 @@ export const uploadQuizFiles = (req: Request, res: Response, next: NextFunction)
   });
 };
 
+/**
+ * 프로젝트 생성/업데이트용 파일 업로드 미들웨어
+ * gamebg_images를 처리
+ */
+export const uploadProjectFiles = (req: Request, res: Response, next: NextFunction) => {
+  const uploadFields = upload.fields([
+    { name: "gamebg_images", maxCount: 20 }, // 게임 배경 이미지 여러 개
+  ]);
+
+  uploadFields(req, res, (err: any) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        data: {
+          message: err.message || "파일 업로드 중 오류가 발생했습니다.",
+        },
+      });
+    }
+    next();
+  });
+};
+
