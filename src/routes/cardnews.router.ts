@@ -20,15 +20,4 @@ export default (router: Router) => {
       cardNewsController.updateCardNews
     ) // PATCH /api/cardnews/:id - 카드뉴스 업데이트 (파일 업로드 지원)
     .delete(cardNewsController.deleteCardNews); // DELETE /api/cardnews/:id - 카드뉴스 삭제
-
-  // 추가 필터링 라우트
-  router.get(
-    "/cardnews/filter/status",
-    cardNewsController.getCardNewsByStatus
-  ); // GET /api/cardnews/filter/status?status=true - 상태별 조회
-
-  router.get(
-    "/cardnews/filter/media-type/:mediaType",
-    cardNewsController.getCardNewsByMediaType
-  ); // GET /api/cardnews/filter/media-type/:mediaType - 미디어 타입별 조회
 };

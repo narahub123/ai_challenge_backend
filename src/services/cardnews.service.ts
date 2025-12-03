@@ -12,19 +12,39 @@ interface PaginatedResponse<T> {
 }
 
 class CardNewsService {
-  // 모든 카드뉴스 조회 (Pagination 지원)
+  // 모든 카드뉴스 조회 (Pagination 및 필터링 지원)
   async getAllCardNews(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    filters?: {
+      search?: string;
+      media_type?: string;
+      ai_generated?: boolean | 0 | 1;
+      status?: boolean | 0 | 1;
+    }
   ): Promise<PaginatedResponse<CardNewsResponseDto>> {
     // 페이지와 limit 유효성 검증
     const validPage = Math.max(1, page);
     const validLimit = Math.max(1, Math.min(100, limit)); // 최대 100개로 제한
 
+    // 필터 정규화 (0/1을 boolean으로 변환)
+    const normalizedFilters = filters
+      ? {
+          search: filters.search,
+          media_type: filters.media_type,
+          ai_generated:
+            filters.ai_generated !== undefined
+              ? Boolean(filters.ai_generated)
+              : undefined,
+          status:
+            filters.status !== undefined ? Boolean(filters.status) : undefined,
+        }
+      : undefined;
+
     // 전체 개수와 데이터 조회
     const [total, documents] = await Promise.all([
-      cardNewsRepository.count(),
-      cardNewsRepository.findAll(validPage, validLimit),
+      cardNewsRepository.count(normalizedFilters),
+      cardNewsRepository.findAll(validPage, validLimit, normalizedFilters),
     ]);
 
     const data = documents.map((doc) => CardNewsResponseDto.fromEntity(doc));
@@ -203,19 +223,6 @@ class CardNewsService {
     }
   }
 
-  // 상태별 카드뉴스 조회
-  async getCardNewsByStatus(status: boolean): Promise<CardNewsResponseDto[]> {
-    const documents = await cardNewsRepository.findByStatus(status);
-    return documents.map((doc) => CardNewsResponseDto.fromEntity(doc));
-  }
-
-  // 미디어 타입별 카드뉴스 조회
-  async getCardNewsByMediaType(
-    mediaType: string
-  ): Promise<CardNewsResponseDto[]> {
-    const documents = await cardNewsRepository.findByMediaType(mediaType);
-    return documents.map((doc) => CardNewsResponseDto.fromEntity(doc));
-  }
 }
 
 export default new CardNewsService();

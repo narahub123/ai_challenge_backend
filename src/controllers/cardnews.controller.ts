@@ -4,14 +4,36 @@ import { CreateCardNewsDto, UpdateCardNewsDto } from "../dtos/request";
 import { catchAsync } from "../middleware";
 
 class CardNewsController {
-  // 모든 카드뉴스 조회 (Pagination 지원)
+  // 모든 카드뉴스 조회 (Pagination 및 필터링 지원)
   getAllCardNews = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       // Query 파라미터에서 page, limit 추출
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
 
-      const result = await cardNewsService.getAllCardNews(page, limit);
+      // 필터 파라미터 추출
+      const filters = {
+        search: req.query.search as string | undefined,
+        media_type: req.query.media_type as string | undefined,
+        ai_generated:
+          req.query.ai_generated !== undefined
+            ? (req.query.ai_generated === "true" ||
+              req.query.ai_generated === "1" ||
+              parseInt(req.query.ai_generated as string, 10) === 1)
+              ? true
+              : false
+            : undefined,
+        status:
+          req.query.status !== undefined
+            ? (req.query.status === "true" ||
+              req.query.status === "1" ||
+              parseInt(req.query.status as string, 10) === 1)
+              ? true
+              : false
+            : undefined,
+      };
+
+      const result = await cardNewsService.getAllCardNews(page, limit, filters);
 
       res.status(200).json({
         success: true,
@@ -147,33 +169,6 @@ class CardNewsController {
     }
   );
 
-  // 상태별 카드뉴스 조회
-  getCardNewsByStatus = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const status = req.query.status === "true";
-
-      const cardNews = await cardNewsService.getCardNewsByStatus(status);
-
-      res.status(200).json({
-        success: true,
-        data: cardNews,
-      });
-    }
-  );
-
-  // 미디어 타입별 카드뉴스 조회
-  getCardNewsByMediaType = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const mediaType = req.params.mediaType;
-
-      const cardNews = await cardNewsService.getCardNewsByMediaType(mediaType);
-
-      res.status(200).json({
-        success: true,
-        data: cardNews,
-      });
-    }
-  );
 }
 
 export default new CardNewsController();

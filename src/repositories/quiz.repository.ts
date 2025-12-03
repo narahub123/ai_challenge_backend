@@ -3,19 +3,73 @@ import { IQuiz } from "../types";
 import { QuizEntity } from "../entities";
 
 class QuizRepository {
-  // 전체 퀴즈 개수 조회
-  async count(): Promise<number> {
-    return await Quiz.countDocuments().exec();
+  // 전체 퀴즈 개수 조회 (필터 포함)
+  async count(filters?: {
+    search?: string;
+    quiz_type?: string;
+    difficulty?: string;
+    status?: boolean;
+  }): Promise<number> {
+    const query = this.buildQuery(filters);
+    return await Quiz.countDocuments(query).exec();
   }
 
-  // 모든 퀴즈 조회 (Pagination 지원)
-  async findAll(page: number = 1, limit: number = 10): Promise<IQuiz[]> {
+  // 모든 퀴즈 조회 (Pagination 및 필터링 지원)
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      search?: string;
+      quiz_type?: string;
+      difficulty?: string;
+      status?: boolean;
+    }
+  ): Promise<IQuiz[]> {
     const skip = (page - 1) * limit;
-    return await Quiz.find()
+    const query = this.buildQuery(filters);
+    
+    return await Quiz.find(query)
       .sort({ quiz_idx: -1 })
       .skip(skip)
       .limit(limit)
       .exec();
+  }
+
+  // 필터 쿼리 빌드
+  private buildQuery(filters?: {
+    search?: string;
+    quiz_type?: string;
+    difficulty?: string;
+    status?: boolean;
+  }): any {
+    const query: any = {};
+
+    if (filters) {
+      // 검색: quiz_name, question에서 검색
+      if (filters.search) {
+        query.$or = [
+          { quiz_name: { $regex: filters.search, $options: "i" } },
+          { question: { $regex: filters.search, $options: "i" } },
+        ];
+      }
+
+      // 퀴즈 타입 필터
+      if (filters.quiz_type) {
+        query.quiz_type = filters.quiz_type;
+      }
+
+      // 난이도 필터
+      if (filters.difficulty) {
+        query.difficulty = filters.difficulty;
+      }
+
+      // 상태 필터
+      if (filters.status !== undefined) {
+        query.status = filters.status;
+      }
+    }
+
+    return query;
   }
 
   // ID로 퀴즈 조회
@@ -47,24 +101,6 @@ class QuizRepository {
     return !!result;
   }
 
-  // 퀴즈 타입별 조회
-  async findByQuizType(quizType: string): Promise<IQuiz[]> {
-    return await Quiz.find({ quiz_type: quizType })
-      .sort({ quiz_idx: -1 })
-      .exec();
-  }
-
-  // 난이도별 조회
-  async findByDifficulty(difficulty: string): Promise<IQuiz[]> {
-    return await Quiz.find({ difficulty })
-      .sort({ quiz_idx: -1 })
-      .exec();
-  }
-
-  // 상태별 조회
-  async findByStatus(status: boolean): Promise<IQuiz[]> {
-    return await Quiz.find({ status }).sort({ quiz_idx: -1 }).exec();
-  }
 }
 
 export default new QuizRepository();

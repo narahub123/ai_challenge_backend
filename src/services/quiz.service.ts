@@ -11,19 +11,36 @@ interface PaginatedResponse<T> {
 }
 
 class QuizService {
-  // 모든 퀴즈 조회 (Pagination 지원)
+  // 모든 퀴즈 조회 (Pagination 및 필터링 지원)
   async getAllQuizzes(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    filters?: {
+      search?: string;
+      quiz_type?: string;
+      difficulty?: string;
+      status?: boolean | 0 | 1;
+    }
   ): Promise<PaginatedResponse<QuizResponseDto>> {
     // 페이지와 limit 유효성 검증
     const validPage = Math.max(1, page);
     const validLimit = Math.max(1, Math.min(100, limit)); // 최대 100개로 제한
 
+    // 필터 정규화 (0/1을 boolean으로 변환)
+    const normalizedFilters = filters
+      ? {
+          search: filters.search,
+          quiz_type: filters.quiz_type,
+          difficulty: filters.difficulty,
+          status:
+            filters.status !== undefined ? Boolean(filters.status) : undefined,
+        }
+      : undefined;
+
     // 전체 개수와 데이터 조회
     const [total, documents] = await Promise.all([
-      quizRepository.count(),
-      quizRepository.findAll(validPage, validLimit),
+      quizRepository.count(normalizedFilters),
+      quizRepository.findAll(validPage, validLimit, normalizedFilters),
     ]);
 
     const data = documents.map((doc) => QuizResponseDto.fromEntity(doc));
@@ -171,23 +188,6 @@ class QuizService {
     }
   }
 
-  // 퀴즈 타입별 조회
-  async getQuizzesByQuizType(quizType: string): Promise<QuizResponseDto[]> {
-    const documents = await quizRepository.findByQuizType(quizType);
-    return documents.map((doc) => QuizResponseDto.fromEntity(doc));
-  }
-
-  // 난이도별 조회
-  async getQuizzesByDifficulty(difficulty: string): Promise<QuizResponseDto[]> {
-    const documents = await quizRepository.findByDifficulty(difficulty);
-    return documents.map((doc) => QuizResponseDto.fromEntity(doc));
-  }
-
-  // 상태별 조회
-  async getQuizzesByStatus(status: boolean): Promise<QuizResponseDto[]> {
-    const documents = await quizRepository.findByStatus(status);
-    return documents.map((doc) => QuizResponseDto.fromEntity(doc));
-  }
 }
 
 export default new QuizService();

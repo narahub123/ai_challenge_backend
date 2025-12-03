@@ -4,14 +4,29 @@ import { CreateQuizDto, UpdateQuizDto } from "../dtos/request";
 import { catchAsync } from "../middleware";
 
 class QuizController {
-  // 모든 퀴즈 조회 (Pagination 지원)
+  // 모든 퀴즈 조회 (Pagination 및 필터링 지원)
   getAllQuizzes = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       // Query 파라미터에서 page, limit 추출
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
 
-      const result = await quizService.getAllQuizzes(page, limit);
+      // 필터 파라미터 추출
+      const filters = {
+        search: req.query.search as string | undefined,
+        quiz_type: req.query.quiz_type as string | undefined,
+        difficulty: req.query.difficulty as string | undefined,
+        status:
+          req.query.status !== undefined
+            ? (req.query.status === "true" ||
+              req.query.status === "1" ||
+              parseInt(req.query.status as string, 10) === 1)
+              ? true
+              : false
+            : undefined,
+      };
+
+      const result = await quizService.getAllQuizzes(page, limit, filters);
 
       res.status(200).json({
         success: true,
@@ -146,47 +161,6 @@ class QuizController {
     }
   );
 
-  // 퀴즈 타입별 조회
-  getQuizzesByQuizType = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const quizType = req.params.quizType;
-
-      const quizzes = await quizService.getQuizzesByQuizType(quizType);
-
-      res.status(200).json({
-        success: true,
-        data: quizzes,
-      });
-    }
-  );
-
-  // 난이도별 조회
-  getQuizzesByDifficulty = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const difficulty = req.params.difficulty;
-
-      const quizzes = await quizService.getQuizzesByDifficulty(difficulty);
-
-      res.status(200).json({
-        success: true,
-        data: quizzes,
-      });
-    }
-  );
-
-  // 상태별 조회
-  getQuizzesByStatus = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const status = req.query.status === "true";
-
-      const quizzes = await quizService.getQuizzesByStatus(status);
-
-      res.status(200).json({
-        success: true,
-        data: quizzes,
-      });
-    }
-  );
 }
 
 export default new QuizController();

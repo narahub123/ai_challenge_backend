@@ -3,19 +3,73 @@ import { ICardNews } from "../types";
 import { CardNewsEntity } from "../entities";
 
 class CardNewsRepository {
-  // 전체 카드뉴스 개수 조회
-  async count(): Promise<number> {
-    return await CardNews.countDocuments().exec();
+  // 전체 카드뉴스 개수 조회 (필터 포함)
+  async count(filters?: {
+    search?: string;
+    media_type?: string;
+    ai_generated?: boolean;
+    status?: boolean;
+  }): Promise<number> {
+    const query = this.buildQuery(filters);
+    return await CardNews.countDocuments(query).exec();
   }
 
-  // 모든 카드뉴스 조회 (Pagination 지원)
-  async findAll(page: number = 1, limit: number = 10): Promise<ICardNews[]> {
+  // 모든 카드뉴스 조회 (Pagination 및 필터링 지원)
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      search?: string;
+      media_type?: string;
+      ai_generated?: boolean;
+      status?: boolean;
+    }
+  ): Promise<ICardNews[]> {
     const skip = (page - 1) * limit;
-    return await CardNews.find()
+    const query = this.buildQuery(filters);
+    
+    return await CardNews.find(query)
       .sort({ card_news_idx: -1 })
       .skip(skip)
       .limit(limit)
       .exec();
+  }
+
+  // 필터 쿼리 빌드
+  private buildQuery(filters?: {
+    search?: string;
+    media_type?: string;
+    ai_generated?: boolean;
+    status?: boolean;
+  }): any {
+    const query: any = {};
+
+    if (filters) {
+      // 검색: card_news_name, description에서 검색
+      if (filters.search) {
+        query.$or = [
+          { card_news_name: { $regex: filters.search, $options: "i" } },
+          { description: { $regex: filters.search, $options: "i" } },
+        ];
+      }
+
+      // 미디어 타입 필터
+      if (filters.media_type) {
+        query.media_type = filters.media_type;
+      }
+
+      // 생성 방식 필터 (ai_generated)
+      if (filters.ai_generated !== undefined) {
+        query.ai_generated = filters.ai_generated;
+      }
+
+      // 상태 필터
+      if (filters.status !== undefined) {
+        query.status = filters.status;
+      }
+    }
+
+    return query;
   }
 
   // ID로 카드뉴스 조회
@@ -53,17 +107,6 @@ class CardNewsRepository {
     return !!result;
   }
 
-  // 조건별 카드뉴스 조회 (옵션)
-  async findByStatus(status: boolean): Promise<ICardNews[]> {
-    return await CardNews.find({ status }).sort({ card_news_idx: -1 }).exec();
-  }
-
-  // 미디어 타입별 카드뉴스 조회
-  async findByMediaType(mediaType: string): Promise<ICardNews[]> {
-    return await CardNews.find({ media_type: mediaType })
-      .sort({ card_news_idx: -1 })
-      .exec();
-  }
 }
 
 export default new CardNewsRepository();
