@@ -25,3 +25,26 @@ export const uploadCardNewsFiles = (req: Request, res: Response, next: NextFunct
   });
 };
 
+/**
+ * 퀴즈 생성/업데이트용 파일 업로드 미들웨어
+ * quiz_image_url과 quiz_video_urls를 처리
+ */
+export const uploadQuizFiles = (req: Request, res: Response, next: NextFunction) => {
+  const uploadFields = upload.fields([
+    { name: "quiz_image_url", maxCount: 1 },
+    { name: "quiz_video_urls", maxCount: 10 },
+  ]);
+
+  uploadFields(req, res, (err: any) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        data: {
+          message: err.message || "파일 업로드 중 오류가 발생했습니다.",
+        },
+      });
+    }
+    next();
+  });
+};
+

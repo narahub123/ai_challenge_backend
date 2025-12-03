@@ -5,6 +5,7 @@ import dialogueUserService from "./dialogueUser.service";
 import moduleService from "./module.service";
 import projectService from "./project.service";
 import projectWorkflowService from "./projectWorkflow.service";
+import quizService from "./quiz.service";
 import userService from "./user.service";
 import userProjectService from "./userProject.service";
 import userQuizAnswersService from "./userQuizAnswer.service";
@@ -19,6 +20,7 @@ export {
   moduleService,
   projectService,
   projectWorkflowService,
+  quizService,
   userService,
   userProjectService,
   userQuizAnswersService,

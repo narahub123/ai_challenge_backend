@@ -5,6 +5,7 @@ import dialogueUserRepository from "./dialogueUser.repository";
 import moduleRepository from "./module.repository";
 import projectRepository from "./project.repository";
 import projectWorkflowRepository from "./projectWorkflow.repository";
+import quizRepository from "./quiz.repository";
 import userRepository from "./user.repository";
 import userProjectRepository from "./userProject.repository";
 import userQuizAnswerRepository from "./userQuizAnswer.repository";
@@ -19,6 +20,7 @@ export {
   moduleRepository,
   projectRepository,
   projectWorkflowRepository,
+  quizRepository,
   userRepository,
   userProjectRepository,
   userQuizAnswerRepository,
