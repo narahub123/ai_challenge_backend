@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from "cors";
 import { connectDB } from "./db";
+import router from "./routes";
 dotenv.config();
 
 const app = express();
@@ -23,6 +24,9 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(compression());
 
 app.use(cookieParser());
+
+// API 라우트 등록
+app.use("/api", router());
 
 connectDB();
 
