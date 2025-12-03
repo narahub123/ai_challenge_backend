@@ -42,13 +42,36 @@ class CardNewsController {
     }
   );
 
-  // 카드뉴스 생성
+  // 카드뉴스 생성 (File 처리 포함)
   createCardNews = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      // Request Body → DTO 변환
-      const createDto = new CreateCardNewsDto(req.body);
+      // multipart/form-data에서 JSON 데이터 파싱
+      let bodyData = req.body;
       
-      const cardNews = await cardNewsService.createCardNews(createDto);
+      // multipart/form-data인 경우 (파일 업로드)
+      if (req.body.data && typeof req.body.data === "string") {
+        try {
+          bodyData = JSON.parse(req.body.data);
+        } catch (e) {
+          bodyData = req.body;
+        }
+      } else if (Object.keys(req.body).length > 0) {
+        // 일반 JSON 요청인 경우 req.body를 그대로 사용
+        bodyData = req.body;
+      }
+
+      // Request Body → DTO 변환
+      const createDto = new CreateCardNewsDto(bodyData);
+
+      // multer로 받은 파일들
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
+
+      const cardNews = await cardNewsService.createCardNews(createDto, {
+        thumbnail_url: files?.thumbnail_url,
+        video_urls: files?.video_urls,
+      });
 
       res.status(201).json({
         success: true,
@@ -57,7 +80,7 @@ class CardNewsController {
     }
   );
 
-  // 카드뉴스 업데이트
+  // 카드뉴스 업데이트 (File 처리 포함)
   updateCardNews = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const cardNewsIdx = parseInt(req.params.id, 10);
@@ -69,12 +92,31 @@ class CardNewsController {
         });
       }
 
+      // multipart/form-data에서 JSON 데이터 파싱
+      let bodyData = req.body;
+      if (typeof req.body.data === "string") {
+        try {
+          bodyData = JSON.parse(req.body.data);
+        } catch (e) {
+          bodyData = req.body;
+        }
+      }
+
       // Request Body → DTO 변환
-      const updateDto = new UpdateCardNewsDto(req.body);
+      const updateDto = new UpdateCardNewsDto(bodyData);
+
+      // multer로 받은 파일들
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
 
       const cardNews = await cardNewsService.updateCardNews(
         cardNewsIdx,
-        updateDto
+        updateDto,
+        {
+          thumbnail_url: files?.thumbnail_url,
+          video_urls: files?.video_urls,
+        }
       );
 
       res.status(200).json({

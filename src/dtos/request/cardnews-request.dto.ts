@@ -1,4 +1,4 @@
-import { CardNewsMediaType } from "../../types";
+import { CardNewsMediaType, CardData } from "../../types";
 
 /**
  * 카드뉴스 생성 요청 DTO
@@ -7,7 +7,7 @@ export class CreateCardNewsDto {
   card_news_name: string;
   description?: string | null;
   thumbnail_url?: string[] | null;
-  card_data?: any | null;
+  card_data?: CardData[] | null;
   total_cards?: number;
   ai_generated?: boolean;
   status?: boolean;
@@ -19,8 +19,13 @@ export class CreateCardNewsDto {
     this.description = data.description ?? null;
     this.thumbnail_url = data.thumbnail_url ?? null;
     this.card_data = data.card_data ?? null;
-    this.total_cards = data.total_cards ?? 1;
-    this.ai_generated = data.ai_generated !== undefined ? Boolean(data.ai_generated) : false;
+    // total_cards가 undefined이거나 0 미만일 때 기본값 1 설정
+    this.total_cards =
+      data.total_cards !== undefined && data.total_cards >= 1
+        ? data.total_cards
+        : 1;
+    this.ai_generated =
+      data.ai_generated !== undefined ? Boolean(data.ai_generated) : false;
     this.status = data.status !== undefined ? Boolean(data.status) : true;
     this.video_urls = data.video_urls ?? null;
     this.media_type = data.media_type || "card";
@@ -35,7 +40,7 @@ export class UpdateCardNewsDto {
   card_news_name?: string;
   description?: string | null;
   thumbnail_url?: string[] | null;
-  card_data?: any | null;
+  card_data?: CardData[] | null;
   total_cards?: number;
   ai_generated?: boolean;
   status?: boolean;
@@ -72,4 +77,3 @@ export class UpdateCardNewsDto {
     }
   }
 }
-

@@ -1,5 +1,5 @@
 import { Router } from "express";
 
 export default (router: Router) => {
-  router.get("");
+  // TODO: 퀴즈 관련 라우트 구현
 };

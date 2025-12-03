@@ -1,5 +1,5 @@
 import { Router } from "express";
 
 export default (router: Router) => {
-  router.get("");
+  // TODO: 프로젝트 관련 라우트 구현
 };

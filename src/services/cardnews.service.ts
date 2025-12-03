@@ -3,6 +3,8 @@ import { CardNewsEntity } from "../entities";
 import { CreateCardNewsDto, UpdateCardNewsDto } from "../dtos/request";
 import { CardNewsResponseDto, PaginationDto } from "../dtos/response";
 import { AppError } from "../middleware";
+import { uploadFile } from "../utils/fileUpload.util";
+import { CardData } from "../types";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -45,8 +47,14 @@ class CardNewsService {
     return CardNewsResponseDto.fromEntity(document);
   }
 
-  // 카드뉴스 생성
-  async createCardNews(dto: CreateCardNewsDto): Promise<CardNewsResponseDto> {
+  // 카드뉴스 생성 (File 처리 포함)
+  async createCardNews(
+    dto: CreateCardNewsDto,
+    files?: {
+      thumbnail_url?: Express.Multer.File[];
+      video_urls?: Express.Multer.File[];
+    }
+  ): Promise<CardNewsResponseDto> {
     // 필수 필드 검증
     if (!dto.card_news_name) {
       throw new AppError("카드뉴스 이름은 필수입니다.", 400);
@@ -56,20 +64,66 @@ class CardNewsService {
       throw new AppError("총 카드 수는 1 이상이어야 합니다.", 400);
     }
 
+    // File 처리: thumbnail_url
+    if (files?.thumbnail_url && files.thumbnail_url.length > 0) {
+      // multer로 받은 File 배열을 업로드하여 URL 배열로 변환
+      const thumbnailUrls = await Promise.all(
+        files.thumbnail_url.map(async (file) => {
+          return await uploadFile(file);
+        })
+      );
+      dto.thumbnail_url = thumbnailUrls;
+    } else if (dto.thumbnail_url && Array.isArray(dto.thumbnail_url)) {
+      // string 배열인 경우 그대로 사용
+      dto.thumbnail_url = dto.thumbnail_url as string[];
+    }
+
+    // File 처리: video_urls
+    if (files?.video_urls && files.video_urls.length > 0) {
+      // multer로 받은 File 배열을 업로드하여 URL 배열로 변환
+      const videoUrls = await Promise.all(
+        files.video_urls.map(async (file) => {
+          return await uploadFile(file);
+        })
+      );
+      dto.video_urls = videoUrls;
+    } else if (dto.video_urls && Array.isArray(dto.video_urls)) {
+      // string 배열인 경우 그대로 사용
+      dto.video_urls = dto.video_urls as string[];
+    }
+
+    // File 처리: card_data의 image_urls
+    if (dto.card_data && Array.isArray(dto.card_data)) {
+      // card_data는 JSON으로 전송되므로, 내부 image_urls는 string[]로 처리
+      // 실제 File 업로드는 별도 필드로 받아야 하므로 여기서는 string만 처리
+      for (const card of dto.card_data) {
+        if (card.image_urls && Array.isArray(card.image_urls)) {
+          // string 배열만 처리 (File은 프론트엔드에서 URL로 변환 후 전송)
+          card.image_urls = card.image_urls.filter(
+            (url) => typeof url === "string"
+          ) as string[];
+        }
+      }
+    }
+
     // DTO → Entity 변환
     const entity = new CardNewsEntity(dto);
-    
+
     // Repository에 Entity 전달하여 생성
     const document = await cardNewsRepository.create(entity);
-    
+
     // Document → Response DTO 변환
     return CardNewsResponseDto.fromEntity(document);
   }
 
-  // 카드뉴스 업데이트
+  // 카드뉴스 업데이트 (File 처리 포함)
   async updateCardNews(
     cardNewsIdx: number,
-    dto: UpdateCardNewsDto
+    dto: UpdateCardNewsDto,
+    files?: {
+      thumbnail_url?: Express.Multer.File[];
+      video_urls?: Express.Multer.File[];
+    }
   ): Promise<CardNewsResponseDto> {
     // 존재 여부 확인
     const existingCardNews = await cardNewsRepository.findById(cardNewsIdx);
@@ -82,9 +136,46 @@ class CardNewsService {
       throw new AppError("총 카드 수는 1 이상이어야 합니다.", 400);
     }
 
+    // File 처리: thumbnail_url
+    if (files?.thumbnail_url && files.thumbnail_url.length > 0) {
+      // multer로 받은 File 배열을 업로드하여 URL 배열로 변환
+      const thumbnailUrls = await Promise.all(
+        files.thumbnail_url.map(async (file) => {
+          return await uploadFile(file);
+        })
+      );
+      dto.thumbnail_url = thumbnailUrls;
+    } else if (dto.thumbnail_url && Array.isArray(dto.thumbnail_url)) {
+      dto.thumbnail_url = dto.thumbnail_url as string[];
+    }
+
+    // File 처리: video_urls
+    if (files?.video_urls && files.video_urls.length > 0) {
+      // multer로 받은 File 배열을 업로드하여 URL 배열로 변환
+      const videoUrls = await Promise.all(
+        files.video_urls.map(async (file) => {
+          return await uploadFile(file);
+        })
+      );
+      dto.video_urls = videoUrls;
+    } else if (dto.video_urls && Array.isArray(dto.video_urls)) {
+      dto.video_urls = dto.video_urls as string[];
+    }
+
+    // File 처리: card_data의 image_urls (업데이트 시)
+    if (dto.card_data && Array.isArray(dto.card_data)) {
+      for (const card of dto.card_data) {
+        if (card.image_urls && Array.isArray(card.image_urls)) {
+          card.image_urls = card.image_urls.filter(
+            (url) => typeof url === "string"
+          ) as string[];
+        }
+      }
+    }
+
     // DTO → Partial Entity 변환
     const updateData = new UpdateCardNewsDto(dto);
-    
+
     // Repository에 전달하여 업데이트
     const updatedDocument = await cardNewsRepository.update(
       cardNewsIdx,
@@ -119,7 +210,9 @@ class CardNewsService {
   }
 
   // 미디어 타입별 카드뉴스 조회
-  async getCardNewsByMediaType(mediaType: string): Promise<CardNewsResponseDto[]> {
+  async getCardNewsByMediaType(
+    mediaType: string
+  ): Promise<CardNewsResponseDto[]> {
     const documents = await cardNewsRepository.findByMediaType(mediaType);
     return documents.map((doc) => CardNewsResponseDto.fromEntity(doc));
   }

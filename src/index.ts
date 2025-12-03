@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from "cors";
+import path from "path";
 import { connectDB } from "./db";
 import router from "./routes";
 import { errorHandler, notFoundHandler } from "./middleware";
@@ -25,6 +26,9 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(compression());
 
 app.use(cookieParser());
+
+// 정적 파일 서빙 (업로드된 파일)
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // API 라우트 등록
 app.use("/api", router());

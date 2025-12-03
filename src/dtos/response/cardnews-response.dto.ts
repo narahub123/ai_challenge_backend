@@ -1,4 +1,4 @@
-import { CardNewsMediaType } from "../../types";
+import { CardNewsMediaType, CardData } from "../../types";
 
 /**
  * 카드뉴스 응답 DTO
@@ -9,7 +9,7 @@ export class CardNewsResponseDto {
   card_news_name: string;
   description: string | null;
   thumbnail_url: string[] | null;
-  card_data: any | null;
+  card_data: CardData[] | null;
   total_cards: number;
   ai_generated: boolean;
   status: boolean;

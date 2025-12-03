@@ -1,6 +1,17 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { ICardNews } from "../types";
+import { ICardNews, CardData } from "../types";
 import { Counter } from "../models";
+
+// CardData 서브스키마
+const CardDataSchema = new Schema<CardData>(
+  {
+    card_number: { type: Number, required: true },
+    title: { type: String, required: true, trim: true },
+    content: { type: String, required: true },
+    image_urls: { type: [String], default: [] },
+  },
+  { _id: false } // 서브도큐먼트에 자동 _id 생성 방지
+);
 
 // CardNews 스키마
 const CardNewsSchema = new Schema<ICardNews>(
@@ -9,7 +20,7 @@ const CardNewsSchema = new Schema<ICardNews>(
     card_news_name: { type: String, required: true, trim: true },
     description: { type: String, default: null },
     thumbnail_url: { type: [String], default: null },
-    card_data: { type: Schema.Types.Mixed, default: null }, // 자유형 JSON
+    card_data: { type: [CardDataSchema], default: null }, // CardData 배열
     total_cards: { type: Number, required: true, default: 1 },
     ai_generated: { type: Boolean, default: false },
     status: { type: Boolean, default: true },
