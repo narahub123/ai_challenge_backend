@@ -111,8 +111,11 @@ class DialogueService {
 
   // 대화 생성
   async createDialogue(dto: CreateDialogueDto): Promise<DialogueResponseDto> {
-    // DTO → Entity 변환
-    const entity = new DialogueEntity(dto);
+    // DTO → Entity 변환 (status를 boolean으로 명시적 변환)
+    const entity = new DialogueEntity({
+      ...dto,
+      status: dto.status !== undefined ? Boolean(dto.status) : true,
+    });
 
     // Repository에 Entity 전달하여 생성
     const document = await dialogueRepository.create(entity);
@@ -150,8 +153,15 @@ class DialogueService {
       throw new AppError("대화를 찾을 수 없습니다.", 404);
     }
 
-    // DTO → Partial Entity 변환
-    const updateData = new UpdateDialogueDto(dto);
+    // DTO → Partial Entity 변환 (status를 boolean으로 명시적 변환)
+    const updateDataDto = new UpdateDialogueDto(dto);
+    const updateData: Partial<DialogueEntity> = {
+      ...updateDataDto,
+      status:
+        updateDataDto.status !== undefined
+          ? Boolean(updateDataDto.status)
+          : undefined,
+    };
 
     // Repository에 전달하여 업데이트
     const updatedDocument = await dialogueRepository.update(

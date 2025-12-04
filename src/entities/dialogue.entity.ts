@@ -11,12 +11,13 @@ export class DialogueEntity {
   created_at?: Date;
   updated_at?: Date;
 
-  constructor(data: Partial<DialogueEntity>) {
+  constructor(data: Partial<DialogueEntity & { status?: boolean | 0 | 1 }>) {
     this.dialogue_idx = data.dialogue_idx;
     this.title = data.title ?? null;
     this.description = data.description ?? null;
     this.participants = data.participants || [];
-    this.status = data.status ?? true;
+    // status를 boolean으로 변환 (0/1도 처리)
+    this.status = data.status !== undefined ? Boolean(data.status) : true;
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
   }
