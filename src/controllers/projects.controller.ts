@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import projectService from "../services/project.service";
-import { CreateProjectDto, UpdateProjectDto } from "../dtos/request";
+import projectModuleLinkService from "../services/project-module-link.service";
+import { CreateProjectDto, UpdateProjectDto, AddModuleToProjectDto, UpdateModuleOrderDto } from "../dtos/request";
 import { catchAsync } from "../middleware";
+import { ProjectWithModulesResponseDto } from "../dtos/response";
 
 class ProjectController {
   // 모든 프로젝트 조회 (Pagination 및 필터링 지원)
@@ -153,6 +155,139 @@ class ProjectController {
       }
 
       await projectService.deleteProject(projectIdx);
+
+      res.status(200).json({
+        success: true,
+        data: null,
+      });
+    }
+  );
+
+  // 프로젝트 + 모듈 링크 조회
+  getProjectWithModules = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const projectIdx = parseInt(req.params.id, 10);
+
+      if (isNaN(projectIdx)) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+        });
+      }
+
+      const result = await projectModuleLinkService.getProjectWithModules(projectIdx);
+      
+      // ProjectResponseDto와 sessions를 합쳐서 응답
+      const responseData = new ProjectWithModulesResponseDto({
+        ...result.project,
+        sessions: result.sessions,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: responseData,
+      });
+    }
+  );
+
+  // 프로젝트에 모듈 추가
+  addModuleToProject = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const projectIdx = parseInt(req.params.id, 10);
+
+      if (isNaN(projectIdx)) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+        });
+      }
+
+      const addModuleDto = new AddModuleToProjectDto(req.body);
+      
+      if (!addModuleDto.module_idx || !addModuleDto.session_number) {
+        return res.status(400).json({
+          success: false,
+          message: "module_idx와 session_number는 필수입니다.",
+        });
+      }
+
+      const link = await projectModuleLinkService.addModuleToProject(
+        projectIdx,
+        addModuleDto.module_idx,
+        addModuleDto.session_number
+      );
+
+      res.status(201).json({
+        success: true,
+        data: link,
+      });
+    }
+  );
+
+  // 모듈 순서 변경
+  updateModuleOrder = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const projectIdx = parseInt(req.params.id, 10);
+      const moduleIdx = parseInt(req.params.moduleIdx, 10);
+
+      if (isNaN(projectIdx) || isNaN(moduleIdx)) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+        });
+      }
+
+      const updateOrderDto = new UpdateModuleOrderDto(req.body);
+      
+      if (!updateOrderDto.session_number || !updateOrderDto.module_order) {
+        return res.status(400).json({
+          success: false,
+          message: "session_number와 module_order는 필수입니다.",
+        });
+      }
+
+      const link = await projectModuleLinkService.updateModuleOrder(
+        projectIdx,
+        moduleIdx,
+        updateOrderDto.session_number,
+        updateOrderDto.module_order
+      );
+
+      res.status(200).json({
+        success: true,
+        data: link,
+      });
+    }
+  );
+
+  // 프로젝트에서 모듈 제거
+  removeModuleFromProject = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const projectIdx = parseInt(req.params.id, 10);
+      const moduleIdx = parseInt(req.params.moduleIdx, 10);
+
+      if (isNaN(projectIdx) || isNaN(moduleIdx)) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+        });
+      }
+
+      // session_number는 query parameter로 받음
+      const sessionNumber = parseInt(req.query.session_number as string, 10);
+
+      if (isNaN(sessionNumber)) {
+        return res.status(400).json({
+          success: false,
+          message: "session_number는 필수입니다.",
+        });
+      }
+
+      await projectModuleLinkService.removeModuleFromProject(
+        projectIdx,
+        moduleIdx,
+        sessionNumber
+      );
 
       res.status(200).json({
         success: true,

@@ -4,6 +4,7 @@ import dialogueEntryService from "./dialogueEntry.service";
 import dialogueUserService from "./dialogueUser.service";
 import moduleService from "./module.service";
 import projectService from "./project.service";
+import projectModuleLinkService from "./project-module-link.service";
 import projectWorkflowService from "./projectWorkflow.service";
 import quizService from "./quiz.service";
 import userService from "./user.service";
@@ -19,6 +20,7 @@ export {
   dialogueUserService,
   moduleService,
   projectService,
+  projectModuleLinkService,
   projectWorkflowService,
   quizService,
   userService,

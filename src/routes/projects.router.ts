@@ -20,4 +20,18 @@ export default (router: Router) => {
       projectController.updateProject
     ) // PATCH /api/projects/:id - 프로젝트 업데이트 (파일 업로드 지원)
     .delete(projectController.deleteProject); // DELETE /api/projects/:id - 프로젝트 삭제
+
+  // 프로젝트 모듈 링크 관련 라우트
+  router
+    .route("/projects/:id/modules")
+    .get(projectController.getProjectWithModules) // GET /api/projects/:id/modules - 프로젝트 + 모듈 링크 조회
+    .post(projectController.addModuleToProject); // POST /api/projects/:id/modules - 모듈 추가
+
+  router
+    .route("/projects/:id/modules/:moduleIdx/order")
+    .patch(projectController.updateModuleOrder); // PATCH /api/projects/:id/modules/:moduleIdx/order - 모듈 순서 변경
+
+  router
+    .route("/projects/:id/modules/:moduleIdx")
+    .delete(projectController.removeModuleFromProject); // DELETE /api/projects/:id/modules/:moduleIdx?session_number=:sessionNumber - 모듈 제거
 };
