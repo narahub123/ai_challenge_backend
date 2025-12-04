@@ -1,8 +1,6 @@
 import express from "express";
 import authRouter from "./auth.router";
 import cardnewsRouter from "./cardnews.router";
-import dialogueEntriesRouter from "./dialogueEntries.router";
-import dialogueUsersRouter from "./dialogueUsers.router";
 import dialoguesRouter from "./dialogues.router";
 import modulesRouter from "./modules.router";
 import projectsRouter from "./projects.router";
@@ -19,8 +17,6 @@ const router = express.Router();
 export default (): express.Router => {
   authRouter(router);
   cardnewsRouter(router);
-  dialogueEntriesRouter(router);
-  dialogueUsersRouter(router);
   dialoguesRouter(router);
   modulesRouter(router);
   projectsRouter(router);

@@ -4,4 +4,7 @@ export * from "./pagination.dto";
 export * from "./project-response.dto";
 export * from "./project-module-link-response.dto";
 export * from "./quiz-response.dto";
+export * from "./dialogue-response.dto";
+export * from "./dialogue-entry-response.dto";
+export * from "./dialogue-user-response.dto";
 
