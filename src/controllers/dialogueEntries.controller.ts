@@ -55,7 +55,7 @@ class DialogueEntryController {
     }
   );
 
-  // 엔트리 생성
+  // 엔트리 생성 (File 처리 포함)
   createEntry = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const dialogueIdx = parseInt(req.params.dialogueId, 10);
@@ -67,13 +67,33 @@ class DialogueEntryController {
         });
       }
 
+      // multipart/form-data에서 JSON 데이터 파싱
+      let bodyData = req.body;
+      if (req.body.data && typeof req.body.data === "string") {
+        try {
+          bodyData = JSON.parse(req.body.data);
+        } catch (e) {
+          bodyData = req.body;
+        }
+      } else if (Object.keys(req.body).length > 0) {
+        bodyData = req.body;
+      }
+
       // Request Body → DTO 변환
       const createDto = new CreateDialogueEntryDto({
-        ...req.body,
+        ...bodyData,
         dialogue_idx: dialogueIdx,
       });
 
-      const entry = await dialogueEntryService.createEntry(createDto);
+      // multer로 받은 파일들
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
+
+      const entry = await dialogueEntryService.createEntry(createDto, {
+        image_urls: files?.image_urls,
+        video_urls: files?.video_urls,
+      });
 
       res.status(201).json({
         success: true,
@@ -82,7 +102,7 @@ class DialogueEntryController {
     }
   );
 
-  // 엔트리 업데이트
+  // 엔트리 업데이트 (File 처리 포함)
   updateEntry = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const entryIdx = parseInt(req.params.entryId, 10);
@@ -94,10 +114,30 @@ class DialogueEntryController {
         });
       }
 
-      // Request Body → DTO 변환
-      const updateDto = new UpdateDialogueEntryDto(req.body);
+      // multipart/form-data에서 JSON 데이터 파싱
+      let bodyData = req.body;
+      if (req.body.data && typeof req.body.data === "string") {
+        try {
+          bodyData = JSON.parse(req.body.data);
+        } catch (e) {
+          bodyData = req.body;
+        }
+      } else if (Object.keys(req.body).length > 0) {
+        bodyData = req.body;
+      }
 
-      const entry = await dialogueEntryService.updateEntry(entryIdx, updateDto);
+      // Request Body → DTO 변환
+      const updateDto = new UpdateDialogueEntryDto(bodyData);
+
+      // multer로 받은 파일들
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
+
+      const entry = await dialogueEntryService.updateEntry(entryIdx, updateDto, {
+        image_urls: files?.image_urls,
+        video_urls: files?.video_urls,
+      });
 
       res.status(200).json({
         success: true,

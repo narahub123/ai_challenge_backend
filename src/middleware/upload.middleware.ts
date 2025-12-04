@@ -70,3 +70,48 @@ export const uploadProjectFiles = (req: Request, res: Response, next: NextFuncti
   });
 };
 
+/**
+ * 대화 엔트리 생성/업데이트용 파일 업로드 미들웨어
+ * image_urls와 video_urls를 처리
+ */
+export const uploadDialogueEntryFiles = (req: Request, res: Response, next: NextFunction) => {
+  const uploadFields = upload.fields([
+    { name: "image_urls", maxCount: 20 },
+    { name: "video_urls", maxCount: 10 },
+  ]);
+
+  uploadFields(req, res, (err: any) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        data: {
+          message: err.message || "파일 업로드 중 오류가 발생했습니다.",
+        },
+      });
+    }
+    next();
+  });
+};
+
+/**
+ * 대화 사용자 생성/업데이트용 파일 업로드 미들웨어
+ * avatar_url을 처리
+ */
+export const uploadDialogueUserFiles = (req: Request, res: Response, next: NextFunction) => {
+  const uploadFields = upload.fields([
+    { name: "avatar_url", maxCount: 1 },
+  ]);
+
+  uploadFields(req, res, (err: any) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        data: {
+          message: err.message || "파일 업로드 중 오류가 발생했습니다.",
+        },
+      });
+    }
+    next();
+  });
+};
+

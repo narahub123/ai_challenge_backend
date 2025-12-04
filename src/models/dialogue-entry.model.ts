@@ -21,7 +21,36 @@ const DialogueEntrySchema = new Schema<IDialogueEntry>(
       required: true,
       validate: {
         validator: function (value: any) {
-          const contentType = (this as any).content_type;
+          // findOneAndUpdate 시 this가 다를 수 있으므로 여러 방법으로 content_type 찾기
+          let contentType = (this as any).content_type;
+          
+          // 업데이트 시 this.getUpdate()를 통해 접근 시도
+          if (!contentType && (this as any).getUpdate) {
+            try {
+              const update = (this as any).getUpdate();
+              if (update && update.$set) {
+                contentType = update.$set.content_type;
+              } else if (update) {
+                contentType = update.content_type;
+              }
+            } catch (e) {
+              // getUpdate()가 사용 불가능한 경우 무시
+            }
+          }
+          
+          // this.get()을 통해 접근 시도
+          if (!contentType && (this as any).get) {
+            try {
+              contentType = (this as any).get("content_type");
+            } catch (e) {
+              // get()이 사용 불가능한 경우 무시
+            }
+          }
+          
+          // 여전히 content_type을 찾을 수 없으면 true 반환 (pre-update hook에서 처리)
+          if (!contentType) {
+            return true;
+          }
           
           // text 타입: string이어야 함
           if (contentType === "text") {
@@ -89,6 +118,36 @@ DialogueEntrySchema.pre<IDialogueEntry>("save", async function () {
 
     if (!counter) throw new Error("Failed to create counter for entry_idx");
     doc.entry_idx = counter.seq;
+  }
+});
+
+// findOneAndUpdate 시 content 검증을 위한 pre-update hook
+DialogueEntrySchema.pre("findOneAndUpdate", async function () {
+  const update = this.getUpdate() as any;
+  if (!update) return;
+
+  // $set이 없으면 생성
+  if (!update.$set) {
+    update.$set = {};
+  }
+
+  const content = update.$set.content;
+  const contentType = update.$set.content_type;
+
+  // content가 업데이트되는데 content_type이 없으면 기존 문서에서 가져오기
+  if (content !== undefined && !contentType) {
+    const doc = await this.model.findOne(this.getQuery());
+    if (doc) {
+      update.$set.content_type = doc.content_type;
+    }
+  }
+  
+  // content_type이 업데이트되는데 content가 없으면 기존 문서에서 가져오기 (validator를 위해)
+  if (contentType !== undefined && content === undefined) {
+    const doc = await this.model.findOne(this.getQuery());
+    if (doc) {
+      update.$set.content = doc.content;
+    }
   }
 });
 
