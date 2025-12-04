@@ -2,7 +2,7 @@ import { Document } from "mongoose";
 
 export type DialogueUserType = "self" | "opponent";
 
-export type DialogueContentType = "text" | "cardnews" | "quiz" | "module";
+export type DialogueContentType = "text" | "cardnews" | "quiz" ;
 
 export interface IDialogueEntry extends Document {
   entry_idx: number;

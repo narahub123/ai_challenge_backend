@@ -16,15 +16,19 @@ const DialogueSchema = new Schema<IDialogue>(
   }
 );
 
-// AUTO_INCREMENT
+// AUTO_INCREMENT 구현: 새 문서 저장 전 dialogue_idx 증가
 DialogueSchema.pre<IDialogue>("save", async function () {
   const doc = this;
-  if (!doc.dialogue_idx) {
+  if (
+    doc.isNew &&
+    (doc.dialogue_idx === undefined || doc.dialogue_idx === null)
+  ) {
     const counter = await Counter.findByIdAndUpdate(
       "dialogue_idx",
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     ).exec();
+
     if (!counter) throw new Error("Failed to create counter for dialogue_idx");
     doc.dialogue_idx = counter.seq;
   }

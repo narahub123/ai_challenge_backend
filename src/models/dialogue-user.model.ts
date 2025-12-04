@@ -15,16 +15,19 @@ const DialogueUserSchema = new Schema<IDialogueUser>(
   }
 );
 
-// AUTO_INCREMENT
+// AUTO_INCREMENT 구현: 새 문서 저장 전 dialogue_user_idx 증가
 DialogueUserSchema.pre<IDialogueUser>("save", async function () {
   const doc = this;
-  // 안전한 검사: undefined 또는 null 일 때만 증가
-  if (doc.dialogue_user_idx == null) {
+  if (
+    doc.isNew &&
+    (doc.dialogue_user_idx === undefined || doc.dialogue_user_idx === null)
+  ) {
     const counter = await Counter.findByIdAndUpdate(
       "dialogue_user_idx",
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     ).exec();
+
     if (!counter)
       throw new Error("Failed to create counter for dialogue_user_idx");
     doc.dialogue_user_idx = counter.seq;
