@@ -12,3 +12,4 @@ export * from "./dialogue.type";
 export * from "./project-workflow.type";
 export * from "./workflow-step.type";
 export * from "./user-workflow-answer.type";
+export * from "./project-module-link.type";

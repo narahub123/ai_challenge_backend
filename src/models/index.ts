@@ -12,3 +12,4 @@ export * from "./dialogue.model";
 export * from "./project-workflow.model";
 export * from "./workflow-step.model";
 export * from "./user-workflow-answer.model";
+export * from "./project-module-link.model";
