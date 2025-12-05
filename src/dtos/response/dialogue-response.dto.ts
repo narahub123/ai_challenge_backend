@@ -1,5 +1,6 @@
 import { IDialogueUser, IDialogueEntry } from "../../types";
 import { DialogueEntryResponseDto } from "./dialogue-entry-response.dto";
+import { DialogueUserResponseDto } from "./dialogue-user-response.dto";
 
 /**
  * 대화 응답 DTO
@@ -9,12 +10,11 @@ export class DialogueResponseDto {
   dialogue_idx: number;
   title: string | null;
   description: string | null;
-  participants: number[];
+  participants: DialogueUserResponseDto[];
   status: 0 | 1;
   created_at: string;
   updated_at: string;
-  dialogue_users?: IDialogueUser[];
-  dialogue_entries?: DialogueEntryResponseDto[];
+  dialogue_entries: DialogueEntryResponseDto[];
 
   constructor(data: DialogueResponseDto) {
     this.dialogue_idx = data.dialogue_idx;
@@ -24,7 +24,6 @@ export class DialogueResponseDto {
     this.status = data.status;
     this.created_at = data.created_at;
     this.updated_at = data.updated_at;
-    this.dialogue_users = data.dialogue_users;
     this.dialogue_entries = data.dialogue_entries;
   }
 
@@ -58,17 +57,6 @@ export class DialogueResponseDto {
     return 0;
   }
 
-  private static normalizeParticipants(input: any): number[] {
-    if (!Array.isArray(input)) return [];
-    return input
-      .map((p) => {
-        if (typeof p === "number") return p;
-        const n = Number(p);
-        return Number.isFinite(n) ? n : null;
-      })
-      .filter((v): v is number => v !== null);
-  }
-
   static fromEntity(
     entity: any,
     dialogueUsers?: IDialogueUser[],
@@ -80,15 +68,18 @@ export class DialogueResponseDto {
       ? dialogueEntries.map((entry) => DialogueEntryResponseDto.fromEntity(entry))
       : [];
 
+    const transformedParticipants = dialogueUsers
+      ? dialogueUsers.map((user) => DialogueUserResponseDto.fromEntity(user))
+      : [];
+
     const dto = new DialogueResponseDto({
       dialogue_idx: entity?.dialogue_idx ?? 0,
       title: entity?.title ?? null,
       description: entity?.description ?? null,
-      participants: DialogueResponseDto.normalizeParticipants(entity?.participants),
+      participants: transformedParticipants,
       status: statusValue,
       created_at: DialogueResponseDto.formatDate(entity?.created_at),
       updated_at: DialogueResponseDto.formatDate(entity?.updated_at),
-      dialogue_users: dialogueUsers ?? [],
       dialogue_entries: transformedEntries,
     });
 
