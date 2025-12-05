@@ -6,7 +6,10 @@ export class CreateDialogueUserDto {
   avatar_url?: string | null;
 
   constructor(data: Partial<CreateDialogueUserDto>) {
-    this.name = data.name || "";
+    if (!data.name || data.name.trim().length === 0) {
+      throw new Error("name은 필수 필드입니다.");
+    }
+    this.name = data.name.trim();
     this.avatar_url = data.avatar_url ?? null;
   }
 }
