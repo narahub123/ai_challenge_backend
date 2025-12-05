@@ -6,18 +6,15 @@ import {
 } from "../../types";
 
 /**
- * 대화 엔트리 응답 DTO
+ * 대화 엔트리 응답 DTO (백엔드 형식)
  */
 export class DialogueEntryResponseDto {
   entry_idx: number;
   dialogue_idx: number;
-
   self_dialogue_user_idx: number;
   opponent_dialogue_user_idx: number;
-
   question: DialogueEntryQA<QuestionContent>;
   answer?: DialogueEntryQA<AnswerContent>;
-
   image_urls: string[] | null;
   video_urls: string[] | null;
   created_at: string;

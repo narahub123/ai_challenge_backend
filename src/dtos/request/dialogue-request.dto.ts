@@ -5,7 +5,7 @@ export class CreateDialogueDto {
   title?: string | null;
   description?: string | null;
   participants?: number[];
-  status?: boolean | 0 | 1;
+  status?: boolean;
 
   constructor(data: Partial<CreateDialogueDto>) {
     this.title = data.title ?? null;
@@ -23,7 +23,7 @@ export class UpdateDialogueDto {
   title?: string | null;
   description?: string | null;
   participants?: number[];
-  status?: boolean | 0 | 1;
+  status?: boolean;
 
   constructor(data: Partial<UpdateDialogueDto>) {
     if (data.title !== undefined) {

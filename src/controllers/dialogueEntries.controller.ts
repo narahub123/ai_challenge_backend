@@ -79,7 +79,25 @@ class DialogueEntryController {
         bodyData = req.body;
       }
 
-      // Request Body → DTO 변환
+      // question[content]가 JSON 문자열인 경우 파싱
+      if (bodyData.question && bodyData.question.content && typeof bodyData.question.content === "string") {
+        try {
+          bodyData.question.content = JSON.parse(bodyData.question.content);
+        } catch (e) {
+          // JSON이 아니면 문자열로 유지
+        }
+      }
+
+      // answer[content]가 JSON 문자열인 경우 파싱
+      if (bodyData.answer && bodyData.answer.content && typeof bodyData.answer.content === "string") {
+        try {
+          bodyData.answer.content = JSON.parse(bodyData.answer.content);
+        } catch (e) {
+          // JSON이 아니면 문자열로 유지
+        }
+      }
+
+      // Request Body → DTO 변환 (백엔드 형식 직접 사용)
       const createDto = new CreateDialogueEntryDto({
         ...bodyData,
         dialogue_idx: dialogueIdx,
@@ -126,7 +144,25 @@ class DialogueEntryController {
         bodyData = req.body;
       }
 
-      // Request Body → DTO 변환
+      // question[content]가 JSON 문자열인 경우 파싱
+      if (bodyData.question && bodyData.question.content && typeof bodyData.question.content === "string") {
+        try {
+          bodyData.question.content = JSON.parse(bodyData.question.content);
+        } catch (e) {
+          // JSON이 아니면 문자열로 유지
+        }
+      }
+
+      // answer[content]가 JSON 문자열인 경우 파싱
+      if (bodyData.answer && bodyData.answer.content && typeof bodyData.answer.content === "string") {
+        try {
+          bodyData.answer.content = JSON.parse(bodyData.answer.content);
+        } catch (e) {
+          // JSON이 아니면 문자열로 유지
+        }
+      }
+
+      // Request Body → DTO 변환 (백엔드 형식 직접 사용)
       const updateDto = new UpdateDialogueEntryDto(bodyData);
 
       // multer로 받은 파일들
