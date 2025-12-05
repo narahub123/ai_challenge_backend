@@ -1,4 +1,9 @@
-import { IDialogueEntry } from "../../types";
+import {
+  IDialogueEntry,
+  DialogueEntryQA,
+  QuestionContent,
+  AnswerContent,
+} from "../../types";
 
 /**
  * 대화 엔트리 응답 DTO
@@ -6,10 +11,13 @@ import { IDialogueEntry } from "../../types";
 export class DialogueEntryResponseDto {
   entry_idx: number;
   dialogue_idx: number;
-  sender_dialogue_user_idx: number;
-  user_type: string;
-  content_type: string;
-  content: string | Record<string, any>;
+
+  self_dialogue_user_idx: number;
+  opponent_dialogue_user_idx: number;
+
+  question: DialogueEntryQA<QuestionContent>;
+  answer?: DialogueEntryQA<AnswerContent>;
+
   image_urls: string[] | null;
   video_urls: string[] | null;
   created_at: string;
@@ -18,10 +26,10 @@ export class DialogueEntryResponseDto {
   constructor(data: DialogueEntryResponseDto) {
     this.entry_idx = data.entry_idx;
     this.dialogue_idx = data.dialogue_idx;
-    this.sender_dialogue_user_idx = data.sender_dialogue_user_idx;
-    this.user_type = data.user_type;
-    this.content_type = data.content_type;
-    this.content = data.content;
+    this.self_dialogue_user_idx = data.self_dialogue_user_idx;
+    this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx;
+    this.question = data.question;
+    this.answer = data.answer;
     this.image_urls = data.image_urls;
     this.video_urls = data.video_urls;
     this.created_at = data.created_at;
@@ -43,10 +51,10 @@ export class DialogueEntryResponseDto {
     return new DialogueEntryResponseDto({
       entry_idx: entity.entry_idx || 0,
       dialogue_idx: entity.dialogue_idx || 0,
-      sender_dialogue_user_idx: entity.sender_dialogue_user_idx || 0,
-      user_type: entity.user_type || "self",
-      content_type: entity.content_type || "text",
-      content: entity.content || "",
+      self_dialogue_user_idx: entity.self_dialogue_user_idx || 0,
+      opponent_dialogue_user_idx: entity.opponent_dialogue_user_idx || 0,
+      question: entity.question,
+      answer: entity.answer,
       image_urls: entity.image_urls || null,
       video_urls: entity.video_urls || null,
       created_at: formatDate(entity.created_at),

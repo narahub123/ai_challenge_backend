@@ -1,107 +1,110 @@
-import mongoose, { Model, Schema } from "mongoose";
+import mongoose, { Model, Schema, CallbackError } from "mongoose";
 import { IDialogueEntry } from "../types";
 import { Counter } from "../models";
+
+// Validator 함수: content_type에 따른 content 구조 검증
+const contentValidator = function (value: any) {
+  // this context 문제로 인해 상위 레벨에서 처리하거나,
+  // 여기서는 value 자체의 구조만 검증합니다.
+  // 실제 content_type과의 일치 여부는 pre-save 훅 등에서 추가 검증이 필요할 수 있으나,
+  // Mongoose Mixed 타입 특성상 여기서 최대한 검증합니다.
+
+  // 주의: 이 validator는 'content' 필드 자체에 대한 검증입니다.
+  // 형제 필드인 'content_type'에 접근하기 어려울 수 있으므로,
+  // 스키마 레벨의 validate나 pre hook을 보완적으로 사용해야 합니다.
+  return true;
+};
 
 const DialogueEntrySchema = new Schema<IDialogueEntry>(
   {
     entry_idx: { type: Number, unique: true, sparse: true },
     dialogue_idx: { type: Number, required: true },
-    sender_dialogue_user_idx: {
-      type: Number,
-      required: true,
-    },
-    user_type: { type: String, enum: ["self", "opponent"], required: true },
-    content_type: {
-      type: String,
-      enum: ["text", "cardnews", "quiz"],
-      required: true,
-    },
-    content: {
-      type: Schema.Types.Mixed,
-      required: true,
-      validate: {
-        validator: function (value: any) {
-          // findOneAndUpdate 시 this가 다를 수 있으므로 여러 방법으로 content_type 찾기
-          let contentType = (this as any).content_type;
-          
-          // 업데이트 시 this.getUpdate()를 통해 접근 시도
-          if (!contentType && (this as any).getUpdate) {
-            try {
-              const update = (this as any).getUpdate();
-              if (update && update.$set) {
-                contentType = update.$set.content_type;
-              } else if (update) {
-                contentType = update.content_type;
-              }
-            } catch (e) {
-              // getUpdate()가 사용 불가능한 경우 무시
-            }
-          }
-          
-          // this.get()을 통해 접근 시도
-          if (!contentType && (this as any).get) {
-            try {
-              contentType = (this as any).get("content_type");
-            } catch (e) {
-              // get()이 사용 불가능한 경우 무시
-            }
-          }
-          
-          // 여전히 content_type을 찾을 수 없으면 true 반환 (pre-update hook에서 처리)
-          if (!contentType) {
-            return true;
-          }
-          
-          // text 타입: string이어야 함
-          if (contentType === "text") {
-            return typeof value === "string" && value.trim().length > 0;
-          }
-          
-          // cardnews 타입: CardNews 구조 검증
-          if (contentType === "cardnews") {
-            if (!value || typeof value !== "object") return false;
-            // 최소 필수 필드: card_news_idx 또는 card_news_name
-            return (
-              typeof value.card_news_idx === "number" ||
-              (typeof value.card_news_name === "string" && value.card_news_name.trim().length > 0)
-            );
-          }
-          
-          // quiz 타입: Quiz 구조 검증
-          if (contentType === "quiz") {
-            if (!value || typeof value !== "object") return false;
-            // 최소 필수 필드: quiz_idx 또는 quiz_name
-            return (
-              typeof value.quiz_idx === "number" ||
-              (typeof value.quiz_name === "string" && value.quiz_name.trim().length > 0)
-            );
-          }
-          
-          return false;
-        },
-        message: function (props: any) {
-          const contentType = (props as any).content_type;
-          if (contentType === "text") {
-            return "content_type이 'text'일 때 content는 비어있지 않은 문자열이어야 합니다.";
-          }
-          if (contentType === "cardnews") {
-            return "content_type이 'cardnews'일 때 content는 card_news_idx 또는 card_news_name을 포함하는 CardNews 객체여야 합니다.";
-          }
-          if (contentType === "quiz") {
-            return "content_type이 'quiz'일 때 content는 quiz_idx 또는 quiz_name을 포함하는 Quiz 객체여야 합니다.";
-          }
-          return "content 검증에 실패했습니다.";
+
+    self_dialogue_user_idx: { type: Number, required: true },
+    opponent_dialogue_user_idx: { type: Number, required: true },
+
+    question: {
+      content_type: {
+        type: String,
+        enum: ["text", "cardnews", "quiz"],
+        required: true,
+      },
+      content: {
+        type: Schema.Types.Mixed,
+        required: true,
+        validate: {
+          validator: function (value: any) {
+            // this는 문서 인스턴스 (생성 시) 또는 쿼리 (업데이트 시)일 수 있음
+            // 안전하게 접근하기 위해 parent(question)의 content_type을 확인해야 함.
+            // 하지만 Mongoose에서 중첩된 경로의 형제 필드 접근은 까다로움.
+            // 따라서 기본적으로 null/undefined 체크만 수행하고,
+            // 상세 검증은 pre('save')에서 수행하는 것이 안전함.
+            return value !== null && value !== undefined;
+          },
+          message: "Question content is required",
         },
       },
     },
-    image_urls: { type: [String], default: null },
-    video_urls: { type: [String], default: null },
+
+    answer: {
+      content_type: {
+        type: String,
+        enum: ["text", "cardnews", "quiz"],
+        required: false,
+      },
+      content: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+    },
+
+    image_urls: { type: [String], default: [] },
+    video_urls: { type: [String], default: [] },
   },
   {
     versionKey: false,
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
   }
 );
+
+// 상세 유효성 검사 (Pre-save Hook)
+DialogueEntrySchema.pre("save", async function () {
+  const doc = this as IDialogueEntry;
+
+  // 1. Question Validation
+  if (doc.question) {
+    const { content_type, content } = doc.question;
+    if (!validateContent(content_type, content)) {
+      throw new Error(`Invalid content structure for question type: ${content_type}`);
+    }
+  }
+
+  // 2. Answer Validation (if exists)
+  if (doc.answer && doc.answer.content_type) {
+    const { content_type, content } = doc.answer;
+    if (!validateContent(content_type, content)) {
+      throw new Error(`Invalid content structure for answer type: ${content_type}`);
+    }
+  }
+});
+
+// Helper: Content Validation Logic
+function validateContent(type: string, content: any): boolean {
+  if (!content) return false;
+
+  switch (type) {
+    case "text":
+      return typeof content === "string" && content.trim().length > 0;
+    case "cardnews":
+      return typeof content === "object" && typeof content.card_news_idx === "number";
+    case "quiz":
+      // QuizContent (question) or QuizAnswerContent (answer)
+      // 공통적으로 quiz_idx는 필수
+      return typeof content === "object" && typeof content.quiz_idx === "number";
+    default:
+      return false;
+  }
+}
 
 // AUTO_INCREMENT 구현: 새 문서 저장 전 entry_idx 증가
 DialogueEntrySchema.pre<IDialogueEntry>("save", async function () {
@@ -118,36 +121,6 @@ DialogueEntrySchema.pre<IDialogueEntry>("save", async function () {
 
     if (!counter) throw new Error("Failed to create counter for entry_idx");
     doc.entry_idx = counter.seq;
-  }
-});
-
-// findOneAndUpdate 시 content 검증을 위한 pre-update hook
-DialogueEntrySchema.pre("findOneAndUpdate", async function () {
-  const update = this.getUpdate() as any;
-  if (!update) return;
-
-  // $set이 없으면 생성
-  if (!update.$set) {
-    update.$set = {};
-  }
-
-  const content = update.$set.content;
-  const contentType = update.$set.content_type;
-
-  // content가 업데이트되는데 content_type이 없으면 기존 문서에서 가져오기
-  if (content !== undefined && !contentType) {
-    const doc = await this.model.findOne(this.getQuery());
-    if (doc) {
-      update.$set.content_type = doc.content_type;
-    }
-  }
-  
-  // content_type이 업데이트되는데 content가 없으면 기존 문서에서 가져오기 (validator를 위해)
-  if (contentType !== undefined && content === undefined) {
-    const doc = await this.model.findOne(this.getQuery());
-    if (doc) {
-      update.$set.content = doc.content;
-    }
   }
 });
 

@@ -1,4 +1,8 @@
-import { DialogueUserType, DialogueContentType } from "../types";
+import {
+  DialogueEntryQA,
+  QuestionContent,
+  AnswerContent,
+} from "../types";
 
 /**
  * DialogueEntry 도메인 엔티티
@@ -6,10 +10,13 @@ import { DialogueUserType, DialogueContentType } from "../types";
 export class DialogueEntryEntity {
   entry_idx?: number;
   dialogue_idx: number;
-  sender_dialogue_user_idx: number;
-  user_type: DialogueUserType;
-  content_type: DialogueContentType;
-  content: string | Record<string, any>;
+
+  self_dialogue_user_idx: number;
+  opponent_dialogue_user_idx: number;
+
+  question: DialogueEntryQA<QuestionContent>;
+  answer?: DialogueEntryQA<AnswerContent>;
+
   image_urls: string[] | null;
   video_urls: string[] | null;
   created_at?: Date;
@@ -18,10 +25,13 @@ export class DialogueEntryEntity {
   constructor(data: Partial<DialogueEntryEntity>) {
     this.entry_idx = data.entry_idx;
     this.dialogue_idx = data.dialogue_idx || 0;
-    this.sender_dialogue_user_idx = data.sender_dialogue_user_idx || 0;
-    this.user_type = data.user_type || "self";
-    this.content_type = data.content_type || "text";
-    this.content = data.content || "";
+    this.self_dialogue_user_idx = data.self_dialogue_user_idx || 0;
+    this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx || 0;
+
+    // Question is mandatory in logic, but might be partial in constructor
+    this.question = data.question!;
+
+    this.answer = data.answer;
     this.image_urls = data.image_urls ?? null;
     this.video_urls = data.video_urls ?? null;
     this.created_at = data.created_at;
@@ -35,10 +45,10 @@ export class DialogueEntryEntity {
     return new DialogueEntryEntity({
       entry_idx: document.entry_idx,
       dialogue_idx: document.dialogue_idx,
-      sender_dialogue_user_idx: document.sender_dialogue_user_idx,
-      user_type: document.user_type,
-      content_type: document.content_type,
-      content: document.content,
+      self_dialogue_user_idx: document.self_dialogue_user_idx,
+      opponent_dialogue_user_idx: document.opponent_dialogue_user_idx,
+      question: document.question,
+      answer: document.answer,
       image_urls: document.image_urls,
       video_urls: document.video_urls,
       created_at: document.created_at,
@@ -53,10 +63,10 @@ export class DialogueEntryEntity {
     return {
       entry_idx: this.entry_idx,
       dialogue_idx: this.dialogue_idx,
-      sender_dialogue_user_idx: this.sender_dialogue_user_idx,
-      user_type: this.user_type,
-      content_type: this.content_type,
-      content: this.content,
+      self_dialogue_user_idx: this.self_dialogue_user_idx,
+      opponent_dialogue_user_idx: this.opponent_dialogue_user_idx,
+      question: this.question,
+      answer: this.answer,
       image_urls: this.image_urls,
       video_urls: this.video_urls,
       created_at: this.created_at,

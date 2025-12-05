@@ -1,23 +1,34 @@
-import { DialogueUserType, DialogueContentType } from "../../types";
+import {
+  ContentType,
+  QuestionContent,
+  AnswerContent,
+  DialogueEntryQA,
+} from "../../types";
 
 /**
  * 대화 엔트리 생성 요청 DTO
  */
 export class CreateDialogueEntryDto {
   dialogue_idx: number;
-  sender_dialogue_user_idx: number;
-  user_type: DialogueUserType;
-  content_type: DialogueContentType;
-  content: string | Record<string, any>;
+
+  self_dialogue_user_idx: number;
+  opponent_dialogue_user_idx: number;
+
+  question: DialogueEntryQA<QuestionContent>;
+  answer?: DialogueEntryQA<AnswerContent>;
+
   image_urls?: string[] | null;
   video_urls?: string[] | null;
 
   constructor(data: Partial<CreateDialogueEntryDto>) {
     this.dialogue_idx = data.dialogue_idx || 0;
-    this.sender_dialogue_user_idx = data.sender_dialogue_user_idx || 0;
-    this.user_type = data.user_type || "self";
-    this.content_type = data.content_type || "text";
-    this.content = data.content || "";
+    this.self_dialogue_user_idx = data.self_dialogue_user_idx || 0;
+    this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx || 0;
+
+    // Question is required
+    this.question = data.question!;
+
+    this.answer = data.answer;
     this.image_urls = data.image_urls ?? null;
     this.video_urls = data.video_urls ?? null;
   }
@@ -28,25 +39,27 @@ export class CreateDialogueEntryDto {
  * 모든 필드가 선택적 (Partial Update)
  */
 export class UpdateDialogueEntryDto {
-  sender_dialogue_user_idx?: number;
-  user_type?: DialogueUserType;
-  content_type?: DialogueContentType;
-  content?: string | Record<string, any>;
+  self_dialogue_user_idx?: number;
+  opponent_dialogue_user_idx?: number;
+
+  question?: DialogueEntryQA<QuestionContent>;
+  answer?: DialogueEntryQA<AnswerContent>;
+
   image_urls?: string[] | null;
   video_urls?: string[] | null;
 
   constructor(data: Partial<UpdateDialogueEntryDto>) {
-    if (data.sender_dialogue_user_idx !== undefined) {
-      this.sender_dialogue_user_idx = data.sender_dialogue_user_idx;
+    if (data.self_dialogue_user_idx !== undefined) {
+      this.self_dialogue_user_idx = data.self_dialogue_user_idx;
     }
-    if (data.user_type !== undefined) {
-      this.user_type = data.user_type;
+    if (data.opponent_dialogue_user_idx !== undefined) {
+      this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx;
     }
-    if (data.content_type !== undefined) {
-      this.content_type = data.content_type;
+    if (data.question !== undefined) {
+      this.question = data.question;
     }
-    if (data.content !== undefined) {
-      this.content = data.content;
+    if (data.answer !== undefined) {
+      this.answer = data.answer;
     }
     if (data.image_urls !== undefined) {
       this.image_urls = data.image_urls;

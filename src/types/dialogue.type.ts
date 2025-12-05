@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import { Document } from "mongoose";
 
 export interface IDialogue extends Document {
   dialogue_idx: number;

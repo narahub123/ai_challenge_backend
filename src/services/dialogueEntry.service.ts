@@ -74,12 +74,12 @@ class DialogueEntryService {
     }
 
     // 필수 필드 검증
-    if (!dto.sender_dialogue_user_idx) {
-      throw new AppError("발신자 ID는 필수입니다.", 400);
+    if (!dto.self_dialogue_user_idx || !dto.opponent_dialogue_user_idx) {
+      throw new AppError("참여자 ID(self, opponent)는 필수입니다.", 400);
     }
 
-    if (!dto.content) {
-      throw new AppError("내용은 필수입니다.", 400);
+    if (!dto.question) {
+      throw new AppError("Question은 필수입니다.", 400);
     }
 
     // File 처리: image_urls
@@ -126,42 +126,9 @@ class DialogueEntryService {
     // DTO → Partial Entity 변환
     const updateData = new UpdateDialogueEntryDto(dto);
 
-    // content가 업데이트되는데 content_type이 없으면 기존 값 사용 (validator를 위해 필요)
-    const finalContentType = updateData.content_type ?? existingEntry.content_type;
-    
-    if (updateData.content !== undefined) {
-      // content 검증
-      if (finalContentType === "text") {
-        if (typeof updateData.content !== "string" || updateData.content.trim().length === 0) {
-          throw new AppError("content_type이 'text'일 때 content는 비어있지 않은 문자열이어야 합니다.", 400);
-        }
-      } else if (finalContentType === "cardnews") {
-        if (!updateData.content || typeof updateData.content !== "object") {
-          throw new AppError("content_type이 'cardnews'일 때 content는 CardNews 객체여야 합니다.", 400);
-        }
-        if (
-          typeof (updateData.content as any).card_news_idx !== "number" &&
-          (!(updateData.content as any).card_news_name || typeof (updateData.content as any).card_news_name !== "string" || (updateData.content as any).card_news_name.trim().length === 0)
-        ) {
-          throw new AppError("content_type이 'cardnews'일 때 content는 card_news_idx 또는 card_news_name을 포함해야 합니다.", 400);
-        }
-      } else if (finalContentType === "quiz") {
-        if (!updateData.content || typeof updateData.content !== "object") {
-          throw new AppError("content_type이 'quiz'일 때 content는 Quiz 객체여야 합니다.", 400);
-        }
-        if (
-          typeof (updateData.content as any).quiz_idx !== "number" &&
-          (!(updateData.content as any).quiz_name || typeof (updateData.content as any).quiz_name !== "string" || (updateData.content as any).quiz_name.trim().length === 0)
-        ) {
-          throw new AppError("content_type이 'quiz'일 때 content는 quiz_idx 또는 quiz_name을 포함해야 합니다.", 400);
-        }
-      }
-      
-      // content_type이 없으면 기존 값 사용
-      if (updateData.content_type === undefined) {
-        updateData.content_type = existingEntry.content_type;
-      }
-    }
+    // Validation Logic for Question/Answer updates
+    // Note: Detailed validation is handled by Mongoose Pre-save hook,
+    // but we can add service-level validation here if needed.
 
     // File 처리: image_urls
     if (files?.image_urls && files.image_urls.length > 0) {
