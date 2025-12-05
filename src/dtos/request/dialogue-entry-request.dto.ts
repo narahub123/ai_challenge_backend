@@ -3,7 +3,7 @@ import {
   QuestionContent,
   AnswerContent,
   DialogueEntryQA,
-} from "../../types";
+} from "../../types/dialogue-entry.type";
 
 /**
  * 대화 엔트리 생성 요청 DTO
@@ -21,12 +21,25 @@ export class CreateDialogueEntryDto {
   video_urls?: string[] | null;
 
   constructor(data: Partial<CreateDialogueEntryDto>) {
-    this.dialogue_idx = data.dialogue_idx || 0;
-    this.self_dialogue_user_idx = data.self_dialogue_user_idx || 0;
-    this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx || 0;
+    if (!data.dialogue_idx) {
+      throw new Error("dialogue_idx는 필수 필드입니다.");
+    }
+    this.dialogue_idx = data.dialogue_idx;
 
-    // Question is required
-    this.question = data.question!;
+    if (!data.self_dialogue_user_idx) {
+      throw new Error("self_dialogue_user_idx는 필수 필드입니다.");
+    }
+    this.self_dialogue_user_idx = data.self_dialogue_user_idx;
+
+    if (!data.opponent_dialogue_user_idx) {
+      throw new Error("opponent_dialogue_user_idx는 필수 필드입니다.");
+    }
+    this.opponent_dialogue_user_idx = data.opponent_dialogue_user_idx;
+
+    if (!data.question) {
+      throw new Error("question은 필수 필드입니다.");
+    }
+    this.question = data.question;
 
     this.answer = data.answer;
     this.image_urls = data.image_urls ?? null;

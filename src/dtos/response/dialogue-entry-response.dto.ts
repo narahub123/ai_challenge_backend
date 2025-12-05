@@ -1,9 +1,9 @@
 import {
-  IDialogueEntry,
+  DialogueEntry,
   DialogueEntryQA,
   QuestionContent,
   AnswerContent,
-} from "../../types";
+} from "../../types/dialogue-entry.type";
 
 /**
  * 대화 엔트리 응답 DTO (백엔드 형식)
@@ -14,7 +14,7 @@ export class DialogueEntryResponseDto {
   self_dialogue_user_idx: number;
   opponent_dialogue_user_idx: number;
   question: DialogueEntryQA<QuestionContent>;
-  answer?: DialogueEntryQA<AnswerContent>;
+  answer?: DialogueEntryQA<AnswerContent> | null;
   image_urls: string[] | null;
   video_urls: string[] | null;
   created_at: string;
@@ -36,7 +36,7 @@ export class DialogueEntryResponseDto {
   /**
    * Entity나 Document를 Response DTO로 변환
    */
-  static fromEntity(entity: IDialogueEntry): DialogueEntryResponseDto {
+  static fromEntity(entity: DialogueEntry): DialogueEntryResponseDto {
     // Date를 ISO string으로 변환
     const formatDate = (date: Date | undefined | null): string => {
       if (!date) return new Date().toISOString();
@@ -51,7 +51,7 @@ export class DialogueEntryResponseDto {
       self_dialogue_user_idx: entity.self_dialogue_user_idx || 0,
       opponent_dialogue_user_idx: entity.opponent_dialogue_user_idx || 0,
       question: entity.question,
-      answer: entity.answer,
+      answer: entity.answer ?? null,
       image_urls: entity.image_urls || null,
       video_urls: entity.video_urls || null,
       created_at: formatDate(entity.created_at),
