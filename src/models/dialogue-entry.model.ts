@@ -1,5 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { DialogueEntry as IDialogueEntry } from "../types/dialogue-entry.type";
+import { IDialogueEntry } from "../types/dialogue-entry.type";
 import { Counter } from "../models";
 
 // DialogueEntryQA 서브스키마 (question/answer 공용)

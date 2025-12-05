@@ -1,5 +1,4 @@
 import {
-  ContentType,
   QuestionContent,
   AnswerContent,
   DialogueEntryQA,

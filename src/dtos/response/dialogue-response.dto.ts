@@ -1,4 +1,4 @@
-import { IDialogueUser, DialogueEntry } from "../../types";
+import { IDialogueUser, IDialogueEntry } from "../../types";
 import { DialogueEntryResponseDto } from "./dialogue-entry-response.dto";
 import { DialogueUserResponseDto } from "./dialogue-user-response.dto";
 
@@ -60,7 +60,7 @@ export class DialogueResponseDto {
   static fromEntity(
     entity: any,
     dialogueUsers?: IDialogueUser[],
-    dialogueEntries?: DialogueEntry[]
+    dialogueEntries?: IDialogueEntry[]
   ): DialogueResponseDto {
     const statusValue = DialogueResponseDto.toStatusNumber(entity?.status);
 

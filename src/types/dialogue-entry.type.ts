@@ -28,7 +28,7 @@ export interface DialogueEntryQA<T extends QuestionContent | AnswerContent> {
 }
 
 // 최종 DialogueEntry 타입
-export interface DialogueEntry extends Document {
+export interface IDialogueEntry extends Document {
   entry_idx: number; // auto increment
   dialogue_idx: number;
 

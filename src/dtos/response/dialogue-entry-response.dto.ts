@@ -1,5 +1,5 @@
 import {
-  DialogueEntry,
+  IDialogueEntry,
   DialogueEntryQA,
   QuestionContent,
   AnswerContent,
@@ -36,7 +36,7 @@ export class DialogueEntryResponseDto {
   /**
    * Entity나 Document를 Response DTO로 변환
    */
-  static fromEntity(entity: DialogueEntry): DialogueEntryResponseDto {
+  static fromEntity(entity: IDialogueEntry): DialogueEntryResponseDto {
     // Date를 ISO string으로 변환
     const formatDate = (date: Date | undefined | null): string => {
       if (!date) return new Date().toISOString();
