@@ -1,6 +1,6 @@
 import { Router } from "express";
-import cardNewsController from "../controllers/cardnews.controller";
-import { uploadCardNewsFiles } from "../middleware/upload.middleware";
+import {cardNewsController} from "../controllers";
+import { uploadCardNewsFiles } from "../middleware";
 
 export default (router: Router) => {
   // 기본 CRUD 라우트

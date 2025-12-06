@@ -1,10 +1,22 @@
 import { Router } from "express";
-import dialogueUserController from "../controllers/dialogueUsers.controller";
+import {dialogueController, dialogueUserController} from "../controllers";
 import {
   uploadDialogueUserFiles,
-} from "../middleware/upload.middleware";
+} from "../middleware";
 
 export default (router: Router) => {
+  // 기본 CRUD 라우트
+  router
+    .route("/dialogues")
+    .get(dialogueController.getAllDialogues) // GET /api/dialogues - 모든 대화 조회
+    .post(dialogueController.createDialogue); // POST /api/dialogues - 대화 생성
+
+  router
+    .route("/dialogues/:id")
+    .get(dialogueController.getDialogueById) // GET /api/dialogues/:id - 대화 상세 조회
+    .patch(dialogueController.updateDialogue) // PATCH /api/dialogues/:id - 대화 업데이트
+    .delete(dialogueController.deleteDialogue); // DELETE /api/dialogues/:id - 대화 삭제
+
   // Dialogue User 라우트 (대화 참여자)
   router
     .route("/dialogue-users")

@@ -1,6 +1,6 @@
 import { DialogueEntry } from "../models";
-import { DialogueEntry as IDialogueEntry } from "../types/dialogue-entry.type";
-import { DialogueEntryEntity } from "../entities/dialogue-entry.entity";
+import { IDialogueEntry } from "../types";
+import { DialogueEntryEntity } from "../entities";
 
 class DialogueEntryRepository {
   // 전체 엔트리 개수 조회 (필터 포함)

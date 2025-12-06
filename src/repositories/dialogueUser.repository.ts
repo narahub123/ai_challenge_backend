@@ -1,5 +1,5 @@
 import { DialogueUser } from "../models";
-import { IDialogueUser } from "../types/dialogue-user.type";
+import { IDialogueUser } from "../types";
 import { DialogueUserEntity } from "../entities";
 
 class DialogueUserRepository {

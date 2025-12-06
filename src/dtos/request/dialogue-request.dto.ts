@@ -4,13 +4,18 @@
 export class CreateDialogueDto {
   title?: string | null;
   description?: string | null;
-  participants?: number[];
-  status?: boolean;
+  participants: number[]; // DialogueUser 참조 배열
+  status?: boolean | 0 | 1;
 
   constructor(data: Partial<CreateDialogueDto>) {
     this.title = data.title ?? null;
     this.description = data.description ?? null;
-    this.participants = data.participants || [];
+    
+    if (!data.participants || !Array.isArray(data.participants) || data.participants.length < 2) {
+      throw new Error("participants는 최소 2명 이상이어야 합니다.");
+    }
+    this.participants = data.participants;
+    
     this.status = data.status !== undefined ? Boolean(data.status) : true;
   }
 }
@@ -23,7 +28,7 @@ export class UpdateDialogueDto {
   title?: string | null;
   description?: string | null;
   participants?: number[];
-  status?: boolean;
+  status?: boolean | 0 | 1;
 
   constructor(data: Partial<UpdateDialogueDto>) {
     if (data.title !== undefined) {
@@ -33,6 +38,9 @@ export class UpdateDialogueDto {
       this.description = data.description;
     }
     if (data.participants !== undefined) {
+      if (!Array.isArray(data.participants) || data.participants.length < 2) {
+        throw new Error("participants는 최소 2명 이상이어야 합니다.");
+      }
       this.participants = data.participants;
     }
     if (data.status !== undefined) {
