@@ -7,6 +7,7 @@ import {
 import { DialogueEntryResponseDto, PaginationDto } from "../dtos/response";
 import { AppError } from "../middleware";
 import { uploadFiles } from "../utils/fileUpload.util";
+import { validateDialogueEntry } from "../utils/dialogueValidation.util";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -88,6 +89,13 @@ class DialogueEntryService {
       throw new AppError("Question은 필수입니다.", 400);
     }
 
+    // Question/Answer 내용 유효성 검사
+    try {
+      validateDialogueEntry(dto);
+    } catch (error: any) {
+      throw new AppError(error.message, 400);
+    }
+
     // File 처리: image_urls
     if (files?.image_urls && files.image_urls.length > 0) {
       const imageUrls = await uploadFiles(files.image_urls);
@@ -141,6 +149,26 @@ class DialogueEntryService {
 
     // DTO → Partial Entity 변환
     const updateData = new UpdateDialogueEntryDto(dto);
+
+    // Question/Answer 내용 유효성 검사 (업데이트되는 경우에만)
+    if (updateData.question || updateData.answer) {
+      // 기존 entry와 병합하여 전체 entry 구성
+      const mergedEntry: CreateDialogueEntryDto = {
+        dialogue_idx: existingEntry.dialogue_idx,
+        self_dialogue_user_idx: updateData.self_dialogue_user_idx ?? existingEntry.self_dialogue_user_idx,
+        opponent_dialogue_user_idx: updateData.opponent_dialogue_user_idx ?? existingEntry.opponent_dialogue_user_idx,
+        question: updateData.question ?? existingEntry.question,
+        answer: updateData.answer !== undefined ? updateData.answer : existingEntry.answer ?? undefined,
+        image_urls: updateData.image_urls ?? existingEntry.image_urls,
+        video_urls: updateData.video_urls ?? existingEntry.video_urls,
+      };
+
+      try {
+        validateDialogueEntry(mergedEntry);
+      } catch (error: any) {
+        throw new AppError(error.message, 400);
+      }
+    }
 
     // File 처리: image_urls
     if (files?.image_urls && files.image_urls.length > 0) {

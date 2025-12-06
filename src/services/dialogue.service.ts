@@ -4,6 +4,7 @@ import { DialogueEntity } from "../entities";
 import { CreateDialogueDto, UpdateDialogueDto, DialogueResponseDto, PaginationDto, DialogueEntryResponseDto, CreateDialogueEntryDto } from "../dtos";
 import { AppError } from "../middleware";
 import {dialogueEntryService} from "../services";
+import { validateDialogueEntries } from "../utils";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -140,9 +141,17 @@ class DialogueService {
     // Repository에 Entity 전달하여 생성
     const document = await dialogueRepository.create(entity);
 
-    // dialogue_entries 생성 (entries가 있는 경우)
+    // dialogue_entries 유효성 검사 및 생성 (entries가 있는 경우)
     const createdEntries: DialogueEntryResponseDto[] = [];
-    if (dto.entries && Array.isArray(dto.entries) && dto.entries.length > 0) {
+    if (dto.entries && Array.isArray(dto.entries)) {
+      // entries 유효성 검사
+      try {
+        validateDialogueEntries(dto.entries);
+      } catch (error: any) {
+        throw new AppError(error.message, 400);
+      }
+
+      if (dto.entries.length > 0) {
       // entries 배열을 순회하며 각 entry 생성
       const entryPromises = dto.entries.map(async (entryData, index) => {
         // 각 entry에 대한 파일 추출 (entries[0].image_urls, entries[0].video_urls 형식)
@@ -185,9 +194,10 @@ class DialogueService {
         }
       });
 
-      // 모든 entry 생성이 실패한 경우 경고
-      if (createdEntries.length === 0 && dto.entries.length > 0) {
-        console.warn("모든 entry 생성이 실패했습니다.");
+        // 모든 entry 생성이 실패한 경우 경고
+        if (createdEntries.length === 0 && dto.entries.length > 0) {
+          console.warn("모든 entry 생성이 실패했습니다.");
+        }
       }
     }
 
@@ -261,9 +271,17 @@ class DialogueService {
         )
       );
 
-      // 새로운 entries 생성
-      if (Array.isArray(dto.entries) && dto.entries.length > 0) {
-        const entryPromises = dto.entries.map(async (entryData, index) => {
+      // 새로운 entries 유효성 검사 및 생성
+      if (Array.isArray(dto.entries)) {
+        // entries 유효성 검사
+        try {
+          validateDialogueEntries(dto.entries);
+        } catch (error: any) {
+          throw new AppError(error.message, 400);
+        }
+
+        if (dto.entries.length > 0) {
+          const entryPromises = dto.entries.map(async (entryData, index) => {
           // 각 entry에 대한 파일 추출 (entries[${index}].image_urls, entries[${index}].video_urls 형식)
           const entryFiles: {
             image_urls?: Express.Multer.File[];
@@ -287,19 +305,20 @@ class DialogueService {
             dialogue_idx: dialogueIdx,
           });
 
-          // Entry 생성
-          return await dialogueEntryService.createEntry(createEntryDto, entryFiles);
-        });
+            // Entry 생성
+            return await dialogueEntryService.createEntry(createEntryDto, entryFiles);
+          });
 
-        // 모든 entry 생성 (Promise.allSettled 사용하여 일부 실패해도 계속 진행)
-        const entryResults = await Promise.allSettled(entryPromises);
+          // 모든 entry 생성 (Promise.allSettled 사용하여 일부 실패해도 계속 진행)
+          const entryResults = await Promise.allSettled(entryPromises);
 
-        // 실패한 entry는 에러 로깅
-        entryResults.forEach((result) => {
-          if (result.status === "rejected") {
-            console.error("Entry 생성 실패:", result.reason);
-          }
-        });
+          // 실패한 entry는 에러 로깅
+          entryResults.forEach((result) => {
+            if (result.status === "rejected") {
+              console.error("Entry 생성 실패:", result.reason);
+            }
+          });
+        }
       }
     }
 
