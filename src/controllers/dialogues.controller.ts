@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import {dialogueService} from "../services";
 import { CreateDialogueDto, UpdateDialogueDto } from "../dtos";
 import { catchAsync } from "../middleware";
+import { parseEntriesFromFormData, parseParticipantsFromFormData } from "../utils/parseFormData.util";
 
 class DialogueController {
   // 모든 대화 조회 (Pagination 및 필터링 지원)
@@ -58,8 +59,23 @@ class DialogueController {
   // 대화 생성
   createDialogue = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
+      // FormData 파싱: participants와 entries 배열을 파싱
+      const parsedBody = { ...req.body };
+      
+      // participants 배열 파싱
+      const participants = parseParticipantsFromFormData(req.body);
+      if (participants.length > 0) {
+        parsedBody.participants = participants;
+      }
+
+      // entries 배열 파싱
+      const entries = parseEntriesFromFormData(req.body);
+      if (entries.length > 0) {
+        parsedBody.entries = entries;
+      }
+
       // Request Body → DTO 변환
-      const createDto = new CreateDialogueDto(req.body);
+      const createDto = new CreateDialogueDto(parsedBody);
 
       // 파일 업로드 처리 (entries 배열의 각 entry에 대한 파일)
       const files = req.files as {
@@ -87,8 +103,23 @@ class DialogueController {
         });
       }
 
+      // FormData 파싱: participants와 entries 배열을 파싱
+      const parsedBody = { ...req.body };
+      
+      // participants 배열 파싱 (있는 경우)
+      const participants = parseParticipantsFromFormData(req.body);
+      if (participants.length > 0) {
+        parsedBody.participants = participants;
+      }
+
+      // entries 배열 파싱 (있는 경우)
+      const entries = parseEntriesFromFormData(req.body);
+      if (entries.length > 0) {
+        parsedBody.entries = entries;
+      }
+
       // Request Body → DTO 변환
-      const updateDto = new UpdateDialogueDto(req.body);
+      const updateDto = new UpdateDialogueDto(parsedBody);
 
       // 파일 업로드 처리 (entries 배열의 각 entry에 대한 파일)
       const files = req.files as {
