@@ -73,12 +73,23 @@ export const uploadProjectFiles = (req: Request, res: Response, next: NextFuncti
 /**
  * 대화 엔트리 생성/업데이트용 파일 업로드 미들웨어
  * image_urls와 video_urls를 처리
+ * entries 배열의 각 entry에 대한 파일도 처리 (최대 10개 entry 지원)
  */
 export const uploadDialogueEntryFiles = (req: Request, res: Response, next: NextFunction) => {
-  const uploadFields = upload.fields([
+  // 기본 필드: 단일 entry용
+  const fields: { name: string; maxCount: number }[] = [
     { name: "image_urls", maxCount: 20 },
     { name: "video_urls", maxCount: 10 },
-  ]);
+  ];
+
+  // entries 배열의 각 entry에 대한 파일 필드 추가 (최대 10개 entry 지원)
+  // entries[0].image_urls, entries[0].video_urls 형식
+  for (let i = 0; i < 10; i++) {
+    fields.push({ name: `entries[${i}].image_urls`, maxCount: 20 });
+    fields.push({ name: `entries[${i}].video_urls`, maxCount: 10 });
+  }
+
+  const uploadFields = upload.fields(fields);
 
   uploadFields(req, res, (err: any) => {
     if (err) {

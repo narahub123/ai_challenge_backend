@@ -61,7 +61,12 @@ class DialogueController {
       // Request Body → DTO 변환
       const createDto = new CreateDialogueDto(req.body);
 
-      const dialogue = await dialogueService.createDialogue(createDto);
+      // 파일 업로드 처리 (entries 배열의 각 entry에 대한 파일)
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      } | undefined;
+
+      const dialogue = await dialogueService.createDialogue(createDto, files);
 
       res.status(201).json({
         success: true,

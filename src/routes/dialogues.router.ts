@@ -2,6 +2,7 @@ import { Router } from "express";
 import {dialogueController, dialogueUserController} from "../controllers";
 import {
   uploadDialogueUserFiles,
+  uploadDialogueEntryFiles,
 } from "../middleware";
 
 export default (router: Router) => {
@@ -9,7 +10,10 @@ export default (router: Router) => {
   router
     .route("/dialogues")
     .get(dialogueController.getAllDialogues) // GET /api/dialogues - 모든 대화 조회
-    .post(dialogueController.createDialogue); // POST /api/dialogues - 대화 생성
+    .post(
+      uploadDialogueEntryFiles, // entries 배열의 파일 업로드 처리
+      dialogueController.createDialogue
+    ); // POST /api/dialogues - 대화 생성 (entries 포함 가능)
 
   router
     .route("/dialogues/:id")
