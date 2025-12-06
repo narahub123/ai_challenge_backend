@@ -219,7 +219,10 @@ class DialogueService {
   // 대화 업데이트
   async updateDialogue(
     dialogueIdx: number,
-    dto: UpdateDialogueDto
+    dto: UpdateDialogueDto,
+    files?: {
+      [key: string]: Express.Multer.File[];
+    }
   ): Promise<DialogueResponseDto> {
     // 존재 여부 확인
     const existingDialogue = await dialogueRepository.findById(dialogueIdx);
@@ -246,13 +249,68 @@ class DialogueService {
       }
     }
 
+    // entries 업데이트 처리 (entries가 제공된 경우)
+    if (dto.entries !== undefined) {
+      // 기존 entries 모두 삭제
+      const existingEntries = await dialogueEntryRepository.findByDialogueIdx(
+        dialogueIdx
+      );
+      await Promise.all(
+        existingEntries.map((entry) =>
+          dialogueEntryRepository.delete(entry.entry_idx)
+        )
+      );
+
+      // 새로운 entries 생성
+      if (Array.isArray(dto.entries) && dto.entries.length > 0) {
+        const entryPromises = dto.entries.map(async (entryData, index) => {
+          // 각 entry에 대한 파일 추출 (entries[${index}].image_urls, entries[${index}].video_urls 형식)
+          const entryFiles: {
+            image_urls?: Express.Multer.File[];
+            video_urls?: Express.Multer.File[];
+          } = {};
+
+          // 파일 필드명 패턴: entries[${index}].image_urls, entries[${index}].video_urls
+          const imageKey = `entries[${index}].image_urls`;
+          const videoKey = `entries[${index}].video_urls`;
+
+          if (files && files[imageKey]) {
+            entryFiles.image_urls = files[imageKey];
+          }
+          if (files && files[videoKey]) {
+            entryFiles.video_urls = files[videoKey];
+          }
+
+          // CreateDialogueEntryDto 생성 (dialogue_idx 추가)
+          const createEntryDto = new CreateDialogueEntryDto({
+            ...entryData,
+            dialogue_idx: dialogueIdx,
+          });
+
+          // Entry 생성
+          return await dialogueEntryService.createEntry(createEntryDto, entryFiles);
+        });
+
+        // 모든 entry 생성 (Promise.allSettled 사용하여 일부 실패해도 계속 진행)
+        const entryResults = await Promise.allSettled(entryPromises);
+
+        // 실패한 entry는 에러 로깅
+        entryResults.forEach((result) => {
+          if (result.status === "rejected") {
+            console.error("Entry 생성 실패:", result.reason);
+          }
+        });
+      }
+    }
+
     // DTO → Partial Entity 변환 (status를 boolean으로 명시적 변환)
-    const updateDataDto = new UpdateDialogueDto(dto);
+    // entries는 별도로 처리했으므로 Entity에서 제외
+    const { entries, ...dialogueUpdateData } = dto;
     const updateData: Partial<DialogueEntity> = {
-      ...updateDataDto,
+      ...dialogueUpdateData,
       status:
-        updateDataDto.status !== undefined
-          ? Boolean(updateDataDto.status)
+        dialogueUpdateData.status !== undefined
+          ? Boolean(dialogueUpdateData.status)
           : undefined,
     };
 
@@ -277,7 +335,7 @@ class DialogueService {
           }).exec()
         : [];
 
-    // dialogue_entries 조회
+    // dialogue_entries 조회 (업데이트된 entries 포함)
     const dialogueEntries = await dialogueEntryRepository.findByDialogueIdx(
       dialogueIdx
     );

@@ -46,6 +46,7 @@ export class UpdateDialogueDto {
   description?: string | null;
   participants?: number[];
   status?: boolean | 0 | 1;
+  entries?: Omit<CreateDialogueEntryDto, "dialogue_idx">[]; // DialogueEntry 업데이트 데이터 (dialogue_idx 제외, 제공 시 기존 entries 모두 삭제 후 새로 생성)
 
   constructor(data: Partial<UpdateDialogueDto>) {
     if (data.title !== undefined) {
@@ -62,6 +63,18 @@ export class UpdateDialogueDto {
     }
     if (data.status !== undefined) {
       this.status = Boolean(data.status);
+    }
+
+    // entries 처리: 배열이거나 단일 객체일 수 있음
+    if (data.entries !== undefined) {
+      if (Array.isArray(data.entries)) {
+        this.entries = data.entries;
+      } else if (typeof data.entries === "object" && data.entries !== null) {
+        // 단일 객체를 배열로 변환
+        this.entries = [data.entries as Omit<CreateDialogueEntryDto, "dialogue_idx">];
+      } else {
+        this.entries = [];
+      }
     }
   }
 }

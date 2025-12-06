@@ -18,7 +18,10 @@ export default (router: Router) => {
   router
     .route("/dialogues/:id")
     .get(dialogueController.getDialogueById) // GET /api/dialogues/:id - 대화 상세 조회
-    .patch(dialogueController.updateDialogue) // PATCH /api/dialogues/:id - 대화 업데이트
+    .patch(
+      uploadDialogueEntryFiles, // entries 배열의 파일 업로드 처리
+      dialogueController.updateDialogue
+    ) // PATCH /api/dialogues/:id - 대화 업데이트 (entries 포함 가능)
     .delete(dialogueController.deleteDialogue); // DELETE /api/dialogues/:id - 대화 삭제
 
   // Dialogue User 라우트 (대화 참여자)
