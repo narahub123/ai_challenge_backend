@@ -1,6 +1,7 @@
 import { IDialogue } from "../../types/dialogue.type";
 import { IDialogueUser, IDialogueEntry } from "../../types";
-import {DialogueUserResponseDto, DialogueEntryResponseDto}from '../../dtos'
+import { DialogueUserResponseDto } from "./dialogue-user-response.dto";
+import { DialogueEntryResponseDto } from "./dialogue-entry-response.dto";
 
 /**
  * 대화 응답 DTO
